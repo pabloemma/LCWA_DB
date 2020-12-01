@@ -35,6 +35,7 @@ gROOT.ProcessLine(
            Char_t           remoteMac[20];\
            Char_t           rxModRate[20];\
            Char_t           txModRate[20];\
+           Char_t            wlanIpAddress;\
            Char_t            wlanOpmode[15];\
                                         };" );
    
@@ -55,40 +56,7 @@ class MyTree(object):
         '''
         Constructor
         '''
-        header_row        = open(afile).readline().strip().split(',')
-    # Create the branch descriptor
-    
-    
-        header_mapping_dictionary = {
-        
-               
-              
-               
-                 'iddevicedetail'   :   ('iddevicedetail',int), 
-                 'afDuplex'         :   ('afDuplex',str), 
-                 'afLinkState'      :   ('afLinkState',str), 
-                 'afOpmode'         :   ('afOpmode' ,str), 
-                 'afRxcapacity'     :   ('afRxcapacity',int),
-                  'afRxchanbw'      :   ('afRxchanbw',int),
-                   'afRxfreq'       :   ('afRxfreq' ,int),
-                    'afRxpower0'    :   ('afRxpower0' ,int) ,
-                        }
-
-        type_mapping_dictionary = {
-               str   : 'C',
-               int   : 'I',
-               float : 'F'
-              
-                              }
-
-    
-    
-    
-        branch_descriptor = ':'.join([header_mapping_dictionary[row][0]+'/'+
-                           type_mapping_dictionary[header_mapping_dictionary[row][1]]
-                           for row in header_row])
-        print(branch_descriptor)
-
+     
     # Handling the input and output names.  Using the same
     # base name for the ROOT output file.
         output_ROOT_file_name  = os.path.splitext(afile)[0] + '.root'
@@ -112,80 +80,7 @@ class MyTree(object):
                 self.file_lines.append(line)
          
         
-    def CreateTree(self):
-                
-        # take the info from the branch_descriptor
-        #iddevicedetail = np.empty((1),dtype='i4')
-        #afDuplex = np.empty((1),dtype='S')
-        #afLinkState = np.empty((1),dtype='S')
-        #afOpmode = np.empty((1),dtype='S')
-        #afRxcapacity = np.empty((1),dtype='i4')
-        #afRxchanbw = np.empty((1),dtype='i4')
-        #afRxfreq = np.empty((1),dtype='i4')
-        #afRxpower0 = np.empty((1),dtype='i4')
-        # for characters:
-
-        info = ROOT.info_t()
-        
-        iddevicedetail = array('f',[0])
-        #afDuplex = array('u',[0])
-        #afDuplex = ""
-
-        #afLinkState = array('u',[0])
-        #afOpmode = array('u',[0])
-        afRxcapacity = array('f',[0])
-        afRxchanbw = array('f',[0])
-        afRxfreq = array('f',[0])
-        afRxpower0 = array('f',[0])
-        
-        self.output_tree.Branch("iddevicedetail",iddevicedetail,'iddevicedetail/F')
-        #self.output_tree.Branch("afDuplex",afDuplex,'afDuplex/C')
-        #self.output_tree.Branch( "afLinkState",afLinkState,'afLinkState/C')           
-        #self.output_tree.Branch("afOpmode",afOpmode,'afOpmode/C')            
-        self.output_tree.Branch("afDuplex",addressof(info,'afDuplex'),'afDuplex/C')
-        self.output_tree.Branch( "afLinkState",addressof(info,'afLinkState'),'afLinkState/C')           
-        self.output_tree.Branch("afOpmode",addressof(info,'afOpmode'),'afOpmode/C')            
-        self.output_tree.Branch("afRxcapacity",afRxcapacity,'afRxcapacity/F' )           
-        self.output_tree.Branch( "afRxchanbw",afRxchanbw,'afRxchanbw/F')           
-        self.output_tree.Branch("afRxfreq",afRxfreq,'afRxfreq/F')          
-        self.output_tree.Branch("afRxpower0",afRxpower0,'afRxpower0/F')            
-        
-        count = 0
-        for line in (self.file_lines):
-            if(count>0):
-                a=line.split(',')
-                iddevicedetail[0] = float(a[0])
-                info.afDuplex = a[1]
-                info.afLinkState = a[2]
-                info.afOpmode = a[3]
-                afRxcapacity[0] = float(a[4])
-                afRxchanbw[0] = float(a[5])
-                afRxfreq[0] = float(a[6])
-                afRxpower0[0] = float(a[7].strip('\n'))
-                #count += 1
-                print(iddevicedetail)
-                self.output_tree.Fill()    
-            count += 1
-        
-        self.output_file.Write()
-        self.output_file.Close()
-        
-    def FillTree(self): 
-               
-        #self.file_lines     = [','.join([val if (val.find(' ') == -1 and val != '')
-        #                        else 'empty' for val in line.split(',')])
-        #                     for line in self.file_lines[1:] if line[0] != '#' ]
-        for line in (self.file_lines):
-            a=line.split(',')
-            iddevicedetail = int(a[0])
-            afDuplex = a[1]
-            afLinkState = a[2]
-            afOpmode = a[3]
-            afRxcapacity = int(a[4])
-            afRxchanbw = int(a[5])
-            afRxfreq = int(a[6])
-            afRxpower0 = int(a[7])
-    
+     
     def CreateTree1(self):
         info = ROOT.info_t()
     
@@ -229,7 +124,6 @@ class MyTree(object):
         uptime =  array('f',[0]) 
         wlanConnections =  array('f',[0]) 
         wlanDownlinkCapacity =  array('f',[0]) 
-        wlanIpAddress =  array('f',[0]) 
         wlanPolling =  array('f',[0]) 
         wlanRxBytes =  array('f',[0]) 
         wlanRxErrBmiss =  array('f',[0]) 
@@ -249,9 +143,9 @@ class MyTree(object):
         wlanUplinkCapacity =  array('f',[0])     
     
         self.output_tree.Branch("iddevicedetail",iddevicedetail,'iddevicedetail/F')
-        self.output_tree.Branch("afDuplex",addressof(info,'afDuplex'),'afDuplex/F')
-        self.output_tree.Branch("afLinkState",addressof(info,'afLinkState'),'afLinkState/F')
-        self.output_tree.Branch("afOpmode",addressof(info,'afOpmode'),'afOpmode/F')
+        self.output_tree.Branch("afDuplex",addressof(info,'afDuplex'),'afDuplex/C')
+        self.output_tree.Branch("afLinkState",addressof(info,'afLinkState'),'afLinkState/C')
+        self.output_tree.Branch("afOpmode",addressof(info,'afOpmode'),'afOpmode/C')
         self.output_tree.Branch("afRxcapacity",afRxcapacity,'afRxcapacity/F')
         self.output_tree.Branch("afRxchanbw",afRxchanbw,'afRxchanbw/F')
         self.output_tree.Branch("afRxfreq",afRxfreq,'afRxfreq/F')
@@ -260,57 +154,57 @@ class MyTree(object):
         self.output_tree.Branch("afTxcapacity",afTxcapacity,'afTxcapacity/F')
         self.output_tree.Branch("afTxchanbw",afTxchanbw,'afTxchanbw/F')
         self.output_tree.Branch("afTxfreq",afTxfreq,'afTxfreq/F')
-        self.output_tree.Branch("afTxmodrate",addressof(info,'afTxmodrate'),'afTxmodrate/F')
+        self.output_tree.Branch("afTxmodrate",addressof(info,'afTxmodrate'),'afTxmodrate/C')
         self.output_tree.Branch("afTxpower",afTxpower,'afTxpower/F')
         self.output_tree.Branch("afTxpowerEirp",afTxpowerEirp,'afTxpowerEirp/F')
         self.output_tree.Branch("airTime",airTime,'airTime/F')
         self.output_tree.Branch("altitude",altitude,'altitude/F')
-        self.output_tree.Branch("apMac",addressof(info,'apMac'),'apMac/F')
-        self.output_tree.Branch("boardCrc",addressof(info,'boardCrc'),'boardCrc/F')
-        self.output_tree.Branch("cfgCrc",addressof(info,'cfgCrc'),'cfgCrc/F')
+        self.output_tree.Branch("apMac",addressof(info,'apMac'),'apMac/C')
+        self.output_tree.Branch("boardCrc",addressof(info,'boardCrc'),'boardCrc/C')
+        self.output_tree.Branch("cfgCrc",addressof(info,'cfgCrc'),'cfgCrc/C')
         self.output_tree.Branch("chain0Signal",chain0Signal,'chain0Signal/F')
         self.output_tree.Branch("chain1Signal",chain1Signal,'chain1Signal/F')
         self.output_tree.Branch("chanbw",chanbw,'chanbw/F')
         self.output_tree.Branch("cinr",cinr,'cinr/F')
         self.output_tree.Branch("cpuUsage",cpuUsage,'cpuUsage/F')
-        self.output_tree.Branch("deviceID",addressof(info,'deviceID'),'deviceID/F')
-        self.output_tree.Branch("deviceIp",addressof(info,'deviceIp'),'deviceIp/F')
-        self.output_tree.Branch("deviceName",addressof(info,'deviceName'),'deviceName/F')
+        self.output_tree.Branch("deviceID",addressof(info,'deviceID'),'deviceID/C')
+        self.output_tree.Branch("deviceIp",addressof(info,'deviceIp'),'deviceIp/C')
+        self.output_tree.Branch("deviceName",addressof(info,'deviceName'),'deviceName/C')
         self.output_tree.Branch("distance",distance,'distance/F')
-        self.output_tree.Branch("dtCreate",addressof(info,'dtCreate'),'dtCreate/F')
-        self.output_tree.Branch("essid",addressof(info,'essid'),'essid/F')
+        self.output_tree.Branch("dtCreate",addressof(info,'dtCreate'),'dtCreate/C')
+        self.output_tree.Branch("essid",addressof(info,'essid'),'essid/C')
         self.output_tree.Branch("evm",evm,'evm/F')
-        self.output_tree.Branch("firmwareVersion",addressof(info,'firmwareVersion'),'firmwareVersion/F')
+        self.output_tree.Branch("firmwareVersion",addressof(info,'firmwareVersion'),'firmwareVersion/C')
         self.output_tree.Branch("freq",freq,'freq/F')
         self.output_tree.Branch("gpsFixed",gpsFixed,'gpsFixed/F')
-        self.output_tree.Branch("lanIpAddress",addressof(info,'lanIpAddress'),'lanIpAddress/F')
+        self.output_tree.Branch("lanIpAddress",addressof(info,'lanIpAddress'),'lanIpAddress/C')
         self.output_tree.Branch("lanPlugged",lanPlugged,'lanPlugged/F')
         self.output_tree.Branch("lanRxBytes",lanRxBytes,'lanRxBytes/F')
         self.output_tree.Branch("lanRxErrors",lanRxErrors,'lanRxErrors/F')
         self.output_tree.Branch("lanRxPackets",lanRxPackets,'lanRxPackets/F')
-        self.output_tree.Branch("lanSpeed",addressof(info,'lanSpeed'),'lanSpeed/F')
+        self.output_tree.Branch("lanSpeed",addressof(info,'lanSpeed'),'lanSpeed/C')
         self.output_tree.Branch("lanTxBytes",lanTxBytes,'lanTxBytes/F')
         self.output_tree.Branch("lanTxErrors",lanTxErrors,'lanTxErrors/F')
         self.output_tree.Branch("lanTxPackets",lanTxPackets,'lanTxPackets/F')
-        self.output_tree.Branch("latitude",addressof(info,'latitude'),'latitude/F')
+        self.output_tree.Branch("latitude",addressof(info,'latitude'),'latitude/C')
         self.output_tree.Branch("loadavg",loadavg,'loadavg/F')
-        self.output_tree.Branch("longitude",addressof(info,'longitude'),'longitude/F')
+        self.output_tree.Branch("longitude",addressof(info,'longitude'),'longitude/C')
         self.output_tree.Branch("memBuffers",memBuffers,'memBuffers/F')
         self.output_tree.Branch("memFree",memFree,'memFree/F')
         self.output_tree.Branch("memTotal",memTotal,'memTotal/F')
         self.output_tree.Branch("noise",noise,'noise/F')
-        self.output_tree.Branch("platform",addressof(info,'platform'),'platform/F')
-        self.output_tree.Branch("remoteIP",addressof(info,'remoteIP'),'remoteIP/F')
-        self.output_tree.Branch("remoteMac",addressof(info,'remoteMac'),'remoteMac/F')
-        self.output_tree.Branch("rxModRate",addressof(info,'rxModRate'),'rxModRate/F')
+        self.output_tree.Branch("platform",addressof(info,'platform'),'platform/C')
+        self.output_tree.Branch("remoteIP",addressof(info,'remoteIP'),'remoteIP/C')
+        self.output_tree.Branch("remoteMac",addressof(info,'remoteMac'),'remoteMac/C')
+        self.output_tree.Branch("rxModRate",addressof(info,'rxModRate'),'rxModRate/C')
         self.output_tree.Branch("signal",signal,'signal/F')
         self.output_tree.Branch("status_flags",status_flags,'status_flags/F')
-        self.output_tree.Branch("txModRate",addressof(info,'txModRate'),'txModRate/F')
+        self.output_tree.Branch("txModRate",addressof(info,'txModRate'),'txModRate/C')
         self.output_tree.Branch("uptime",uptime,'uptime/F')
         self.output_tree.Branch("wlanConnections",wlanConnections,'wlanConnections/F')
         self.output_tree.Branch("wlanDownlinkCapacity",wlanDownlinkCapacity,'wlanDownlinkCapacity/F')
-        self.output_tree.Branch("wlanIpAddress",wlanIpAddress,'wlanIpAddress/F')
-        self.output_tree.Branch("wlanOpmode",addressof(info,'wlanOpmode'),'wlanOpmode/F')
+        self.output_tree.Branch("wlanIpAddress",addressof(info,'wlanIpAddress'),'wlanIpAddress/C')
+        self.output_tree.Branch("wlanOpmode",addressof(info,'wlanOpmode'),'wlanOpmode/C')
         self.output_tree.Branch("wlanPolling",wlanPolling,'wlanPolling/F')
         self.output_tree.Branch("wlanRxBytes",wlanRxBytes,'wlanRxBytes/F')
         self.output_tree.Branch("wlanRxErrBmiss",wlanRxErrBmiss,'wlanRxErrBmiss/F')
@@ -334,6 +228,13 @@ class MyTree(object):
         for line in (self.file_lines):
             if(count>0):
                 a=line.split(',')
+                a[79] = a[79].strip('\n')
+                
+                for p in range(0,len(a)):
+                    if(a[p] ==''):
+                        a[p]='0.0'
+                    
+                    
                 iddevicedetail = float(a[0])
                 afDuplex = a[1]
                 afLinkState = a[2]
@@ -395,7 +296,7 @@ class MyTree(object):
                 uptime = float(a[58])
                 wlanConnections = float(a[59])
                 wlanDownlinkCapacity = float(a[60])
-                wlanIpAddress = float(a[61])
+                wlanIpAddress = a[61]
                 wlanOpmode = a[62]
                 wlanPolling = float(a[63])
                 wlanRxBytes = float(a[64])
@@ -413,7 +314,10 @@ class MyTree(object):
                 wlanTxLatency = float(a[76])
                 wlanTxPackets = float(a[77])
                 wlanTxRate = float(a[78])
-                wlanUplinkCapacity= float(a[79])
+                wlanUplinkCapacity= float(a[79]) 
+                
+                self.output_tree.Fill()    
+
             count += 1
         
         self.output_file.Write()

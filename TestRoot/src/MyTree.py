@@ -1,0 +1,432 @@
+'''
+Created on Nov 30, 2020
+
+@author: klein
+Running version
+'''
+
+import ROOT
+from ROOT import TFile, TTree, gROOT, addressof 
+import os
+#import numpy as np
+from array  import array
+
+gROOT.ProcessLine(
+            "struct info_t {\
+           Char_t          afDuplex[30];\
+           Char_t          afLinkState[20];\
+           Char_t          afOpmode[20];\
+           Char_t          afTxmodrate[5];\
+           Char_t          apMac[30];\
+           Char_t          boardCrc[30];\
+           Char_t          cfgCrc[20];\
+           Char_t           deviceID[30];\
+           Char_t           deviceIp[20];\
+           Char_t          deviceName[60];\
+           Char_t           dtCreate[30];\
+           Char_t          essid[40];\
+           Char_t          firmwareVersion[60];\
+           Char_t          lanIpAddress[20];\
+           Char_t          lanSpeed[15];\
+           Char_t           latitude[20];\
+           Char_t           longitude[20];\
+           Char_t           platform[40];\
+           Char_t           remoteIP[20];\
+           Char_t           remoteMac[20];\
+           Char_t           rxModRate[20];\
+           Char_t           txModRate[20];\
+           Char_t            wlanOpmode[15];\
+                                        };" );
+   
+
+
+
+
+
+
+
+class MyTree(object):
+    '''
+    classdocs
+    '''
+
+
+    def __init__(self, afile = None,tree_name = None):
+        '''
+        Constructor
+        '''
+        header_row        = open(afile).readline().strip().split(',')
+    # Create the branch descriptor
+    
+    
+        header_mapping_dictionary = {
+        
+               
+              
+               
+                 'iddevicedetail'   :   ('iddevicedetail',int), 
+                 'afDuplex'         :   ('afDuplex',str), 
+                 'afLinkState'      :   ('afLinkState',str), 
+                 'afOpmode'         :   ('afOpmode' ,str), 
+                 'afRxcapacity'     :   ('afRxcapacity',int),
+                  'afRxchanbw'      :   ('afRxchanbw',int),
+                   'afRxfreq'       :   ('afRxfreq' ,int),
+                    'afRxpower0'    :   ('afRxpower0' ,int) ,
+                        }
+
+        type_mapping_dictionary = {
+               str   : 'C',
+               int   : 'I',
+               float : 'F'
+              
+                              }
+
+    
+    
+    
+        branch_descriptor = ':'.join([header_mapping_dictionary[row][0]+'/'+
+                           type_mapping_dictionary[header_mapping_dictionary[row][1]]
+                           for row in header_row])
+        print(branch_descriptor)
+
+    # Handling the input and output names.  Using the same
+    # base name for the ROOT output file.
+        output_ROOT_file_name  = os.path.splitext(afile)[0] + '.root'
+        self.output_file            = ROOT.TFile(output_ROOT_file_name, 'recreate')
+        print("Outputting %s -> %s" % (afile, output_ROOT_file_name))
+
+        self.output_tree            = ROOT.TTree(tree_name, tree_name)
+        
+        self.file_lines = []
+        file1 = open(afile,'r')
+        
+        count=0
+        while True:
+            count += 1
+            line = str(file1.readline())
+            
+            #If line is empty we reached EOFError
+            if not line:
+                break
+            else: 
+                self.file_lines.append(line)
+         
+        
+    def CreateTree(self):
+                
+        # take the info from the branch_descriptor
+        #iddevicedetail = np.empty((1),dtype='i4')
+        #afDuplex = np.empty((1),dtype='S')
+        #afLinkState = np.empty((1),dtype='S')
+        #afOpmode = np.empty((1),dtype='S')
+        #afRxcapacity = np.empty((1),dtype='i4')
+        #afRxchanbw = np.empty((1),dtype='i4')
+        #afRxfreq = np.empty((1),dtype='i4')
+        #afRxpower0 = np.empty((1),dtype='i4')
+        # for characters:
+
+        info = ROOT.info_t()
+        
+        iddevicedetail = array('f',[0])
+        #afDuplex = array('u',[0])
+        #afDuplex = ""
+
+        #afLinkState = array('u',[0])
+        #afOpmode = array('u',[0])
+        afRxcapacity = array('f',[0])
+        afRxchanbw = array('f',[0])
+        afRxfreq = array('f',[0])
+        afRxpower0 = array('f',[0])
+        
+        self.output_tree.Branch("iddevicedetail",iddevicedetail,'iddevicedetail/F')
+        #self.output_tree.Branch("afDuplex",afDuplex,'afDuplex/C')
+        #self.output_tree.Branch( "afLinkState",afLinkState,'afLinkState/C')           
+        #self.output_tree.Branch("afOpmode",afOpmode,'afOpmode/C')            
+        self.output_tree.Branch("afDuplex",addressof(info,'afDuplex'),'afDuplex/C')
+        self.output_tree.Branch( "afLinkState",addressof(info,'afLinkState'),'afLinkState/C')           
+        self.output_tree.Branch("afOpmode",addressof(info,'afOpmode'),'afOpmode/C')            
+        self.output_tree.Branch("afRxcapacity",afRxcapacity,'afRxcapacity/F' )           
+        self.output_tree.Branch( "afRxchanbw",afRxchanbw,'afRxchanbw/F')           
+        self.output_tree.Branch("afRxfreq",afRxfreq,'afRxfreq/F')          
+        self.output_tree.Branch("afRxpower0",afRxpower0,'afRxpower0/F')            
+        
+        count = 0
+        for line in (self.file_lines):
+            if(count>0):
+                a=line.split(',')
+                iddevicedetail[0] = float(a[0])
+                info.afDuplex = a[1]
+                info.afLinkState = a[2]
+                info.afOpmode = a[3]
+                afRxcapacity[0] = float(a[4])
+                afRxchanbw[0] = float(a[5])
+                afRxfreq[0] = float(a[6])
+                afRxpower0[0] = float(a[7].strip('\n'))
+                #count += 1
+                print(iddevicedetail)
+                self.output_tree.Fill()    
+            count += 1
+        
+        self.output_file.Write()
+        self.output_file.Close()
+        
+    def FillTree(self): 
+               
+        #self.file_lines     = [','.join([val if (val.find(' ') == -1 and val != '')
+        #                        else 'empty' for val in line.split(',')])
+        #                     for line in self.file_lines[1:] if line[0] != '#' ]
+        for line in (self.file_lines):
+            a=line.split(',')
+            iddevicedetail = int(a[0])
+            afDuplex = a[1]
+            afLinkState = a[2]
+            afOpmode = a[3]
+            afRxcapacity = int(a[4])
+            afRxchanbw = int(a[5])
+            afRxfreq = int(a[6])
+            afRxpower0 = int(a[7])
+    
+    def CreateTree1(self):
+        info = ROOT.info_t()
+    
+    
+        iddevicedetail =  array('f',[0]) 
+        afRxcapacity =  array('f',[0]) 
+        afRxchanbw =  array('f',[0]) 
+        afRxfreq =  array('f',[0]) 
+        afRxpower0 =  array('f',[0]) 
+        afRxpower1 =  array('f',[0]) 
+        afTxcapacity =  array('f',[0]) 
+        afTxchanbw =  array('f',[0]) 
+        afTxfreq =  array('f',[0]) 
+        afTxpower =  array('f',[0]) 
+        afTxpowerEirp =  array('f',[0]) 
+        airTime =  array('f',[0]) 
+        altitude =  array('f',[0]) 
+        chain0Signal =  array('f',[0]) 
+        chain1Signal =  array('f',[0]) 
+        chanbw =  array('f',[0]) 
+        cinr =  array('f',[0]) 
+        cpuUsage =  array('f',[0]) 
+        distance =  array('f',[0]) 
+        evm =  array('f',[0]) 
+        freq =  array('f',[0]) 
+        gpsFixed =  array('f',[0]) 
+        lanPlugged =  array('f',[0]) 
+        lanRxBytes =  array('f',[0]) 
+        lanRxErrors =  array('f',[0]) 
+        lanRxPackets =  array('f',[0]) 
+        lanTxBytes =  array('f',[0]) 
+        lanTxErrors =  array('f',[0]) 
+        lanTxPackets =  array('f',[0]) 
+        loadavg =  array('f',[0]) 
+        memBuffers =  array('f',[0]) 
+        memFree =  array('f',[0]) 
+        memTotal =  array('f',[0]) 
+        noise =  array('f',[0]) 
+        signal =  array('f',[0]) 
+        status_flags =  array('f',[0]) 
+        uptime =  array('f',[0]) 
+        wlanConnections =  array('f',[0]) 
+        wlanDownlinkCapacity =  array('f',[0]) 
+        wlanIpAddress =  array('f',[0]) 
+        wlanPolling =  array('f',[0]) 
+        wlanRxBytes =  array('f',[0]) 
+        wlanRxErrBmiss =  array('f',[0]) 
+        wlanRxErrCrypt =  array('f',[0]) 
+        wlanRxErrFrag =  array('f',[0]) 
+        wlanRxErrNwid =  array('f',[0]) 
+        wlanRxErrors =  array('f',[0]) 
+        wlanRxErrOther =  array('f',[0]) 
+        wlanRxErrRetries =  array('f',[0]) 
+        wlanRxPackets =  array('f',[0]) 
+        wlanRxRate =  array('f',[0]) 
+        wlanTxBytes =  array('f',[0]) 
+        wlanTxErrors =  array('f',[0]) 
+        wlanTxLatency =  array('f',[0]) 
+        wlanTxPackets =  array('f',[0]) 
+        wlanTxRate =  array('f',[0]) 
+        wlanUplinkCapacity =  array('f',[0])     
+    
+        self.output_tree.Branch("iddevicedetail",iddevicedetail,'iddevicedetail/F')
+        self.output_tree.Branch("afDuplex",addressof(info,'afDuplex'),'afDuplex/F')
+        self.output_tree.Branch("afLinkState",addressof(info,'afLinkState'),'afLinkState/F')
+        self.output_tree.Branch("afOpmode",addressof(info,'afOpmode'),'afOpmode/F')
+        self.output_tree.Branch("afRxcapacity",afRxcapacity,'afRxcapacity/F')
+        self.output_tree.Branch("afRxchanbw",afRxchanbw,'afRxchanbw/F')
+        self.output_tree.Branch("afRxfreq",afRxfreq,'afRxfreq/F')
+        self.output_tree.Branch("afRxpower0",afRxpower0,'afRxpower0/F')
+        self.output_tree.Branch("afRxpower1",afRxpower1,'afRxpower1/F')
+        self.output_tree.Branch("afTxcapacity",afTxcapacity,'afTxcapacity/F')
+        self.output_tree.Branch("afTxchanbw",afTxchanbw,'afTxchanbw/F')
+        self.output_tree.Branch("afTxfreq",afTxfreq,'afTxfreq/F')
+        self.output_tree.Branch("afTxmodrate",addressof(info,'afTxmodrate'),'afTxmodrate/F')
+        self.output_tree.Branch("afTxpower",afTxpower,'afTxpower/F')
+        self.output_tree.Branch("afTxpowerEirp",afTxpowerEirp,'afTxpowerEirp/F')
+        self.output_tree.Branch("airTime",airTime,'airTime/F')
+        self.output_tree.Branch("altitude",altitude,'altitude/F')
+        self.output_tree.Branch("apMac",addressof(info,'apMac'),'apMac/F')
+        self.output_tree.Branch("boardCrc",addressof(info,'boardCrc'),'boardCrc/F')
+        self.output_tree.Branch("cfgCrc",addressof(info,'cfgCrc'),'cfgCrc/F')
+        self.output_tree.Branch("chain0Signal",chain0Signal,'chain0Signal/F')
+        self.output_tree.Branch("chain1Signal",chain1Signal,'chain1Signal/F')
+        self.output_tree.Branch("chanbw",chanbw,'chanbw/F')
+        self.output_tree.Branch("cinr",cinr,'cinr/F')
+        self.output_tree.Branch("cpuUsage",cpuUsage,'cpuUsage/F')
+        self.output_tree.Branch("deviceID",addressof(info,'deviceID'),'deviceID/F')
+        self.output_tree.Branch("deviceIp",addressof(info,'deviceIp'),'deviceIp/F')
+        self.output_tree.Branch("deviceName",addressof(info,'deviceName'),'deviceName/F')
+        self.output_tree.Branch("distance",distance,'distance/F')
+        self.output_tree.Branch("dtCreate",addressof(info,'dtCreate'),'dtCreate/F')
+        self.output_tree.Branch("essid",addressof(info,'essid'),'essid/F')
+        self.output_tree.Branch("evm",evm,'evm/F')
+        self.output_tree.Branch("firmwareVersion",addressof(info,'firmwareVersion'),'firmwareVersion/F')
+        self.output_tree.Branch("freq",freq,'freq/F')
+        self.output_tree.Branch("gpsFixed",gpsFixed,'gpsFixed/F')
+        self.output_tree.Branch("lanIpAddress",addressof(info,'lanIpAddress'),'lanIpAddress/F')
+        self.output_tree.Branch("lanPlugged",lanPlugged,'lanPlugged/F')
+        self.output_tree.Branch("lanRxBytes",lanRxBytes,'lanRxBytes/F')
+        self.output_tree.Branch("lanRxErrors",lanRxErrors,'lanRxErrors/F')
+        self.output_tree.Branch("lanRxPackets",lanRxPackets,'lanRxPackets/F')
+        self.output_tree.Branch("lanSpeed",addressof(info,'lanSpeed'),'lanSpeed/F')
+        self.output_tree.Branch("lanTxBytes",lanTxBytes,'lanTxBytes/F')
+        self.output_tree.Branch("lanTxErrors",lanTxErrors,'lanTxErrors/F')
+        self.output_tree.Branch("lanTxPackets",lanTxPackets,'lanTxPackets/F')
+        self.output_tree.Branch("latitude",addressof(info,'latitude'),'latitude/F')
+        self.output_tree.Branch("loadavg",loadavg,'loadavg/F')
+        self.output_tree.Branch("longitude",addressof(info,'longitude'),'longitude/F')
+        self.output_tree.Branch("memBuffers",memBuffers,'memBuffers/F')
+        self.output_tree.Branch("memFree",memFree,'memFree/F')
+        self.output_tree.Branch("memTotal",memTotal,'memTotal/F')
+        self.output_tree.Branch("noise",noise,'noise/F')
+        self.output_tree.Branch("platform",addressof(info,'platform'),'platform/F')
+        self.output_tree.Branch("remoteIP",addressof(info,'remoteIP'),'remoteIP/F')
+        self.output_tree.Branch("remoteMac",addressof(info,'remoteMac'),'remoteMac/F')
+        self.output_tree.Branch("rxModRate",addressof(info,'rxModRate'),'rxModRate/F')
+        self.output_tree.Branch("signal",signal,'signal/F')
+        self.output_tree.Branch("status_flags",status_flags,'status_flags/F')
+        self.output_tree.Branch("txModRate",addressof(info,'txModRate'),'txModRate/F')
+        self.output_tree.Branch("uptime",uptime,'uptime/F')
+        self.output_tree.Branch("wlanConnections",wlanConnections,'wlanConnections/F')
+        self.output_tree.Branch("wlanDownlinkCapacity",wlanDownlinkCapacity,'wlanDownlinkCapacity/F')
+        self.output_tree.Branch("wlanIpAddress",wlanIpAddress,'wlanIpAddress/F')
+        self.output_tree.Branch("wlanOpmode",addressof(info,'wlanOpmode'),'wlanOpmode/F')
+        self.output_tree.Branch("wlanPolling",wlanPolling,'wlanPolling/F')
+        self.output_tree.Branch("wlanRxBytes",wlanRxBytes,'wlanRxBytes/F')
+        self.output_tree.Branch("wlanRxErrBmiss",wlanRxErrBmiss,'wlanRxErrBmiss/F')
+        self.output_tree.Branch("wlanRxErrCrypt",wlanRxErrCrypt,'wlanRxErrCrypt/F')
+        self.output_tree.Branch("wlanRxErrFrag",wlanRxErrFrag,'wlanRxErrFrag/F')
+        self.output_tree.Branch("wlanRxErrNwid",wlanRxErrNwid,'wlanRxErrNwid/F')
+        self.output_tree.Branch("wlanRxErrors",wlanRxErrors,'wlanRxErrors/F')
+        self.output_tree.Branch("wlanRxErrOther",wlanRxErrOther,'wlanRxErrOther/F')
+        self.output_tree.Branch("wlanRxErrRetries",wlanRxErrRetries,'wlanRxErrRetries/F')
+        self.output_tree.Branch("wlanRxPackets",wlanRxPackets,'wlanRxPackets/F')
+        self.output_tree.Branch("wlanRxRate",wlanRxRate,'wlanRxRate/F')
+        self.output_tree.Branch("wlanTxBytes",wlanTxBytes,'wlanTxBytes/F')
+        self.output_tree.Branch("wlanTxErrors",wlanTxErrors,'wlanTxErrors/F')
+        self.output_tree.Branch("wlanTxLatency",wlanTxLatency,'wlanTxLatency/F')
+        self.output_tree.Branch("wlanTxPackets",wlanTxPackets,'wlanTxPackets/F')
+        self.output_tree.Branch("wlanTxRate",wlanTxRate,'wlanTxRate/F')
+        self.output_tree.Branch("wlanUplinkCapacity",wlanUplinkCapacity,'wlanUplinkCapacity/F')
+ 
+        count = 0
+            
+        for line in (self.file_lines):
+            if(count>0):
+                a=line.split(',')
+                iddevicedetail = float(a[0])
+                afDuplex = a[1]
+                afLinkState = a[2]
+                afOpmode = a[3]
+                afRxcapacity = float(a[4])
+                afRxchanbw = float(a[5])
+                afRxfreq = float(a[6])
+                afRxpower0 = float(a[7])
+                afRxpower1 = float(a[8])
+                afTxcapacity = float(a[9])
+                afTxchanbw = float(a[10])
+                afTxfreq = float(a[11])
+                afTxmodrate = a[12]
+                afTxpower = float(a[13])
+                afTxpowerEirp = float(a[14])
+                airTime = float(a[15])
+                altitude = float(a[16])
+                apMac = a[17]
+                boardCrc = a[18]
+                cfgCrc = a[19]
+                chain0Signal = float(a[20])
+                chain1Signal = float(a[21])
+                chanbw = float(a[22])
+                cinr = float(a[23])
+                cpuUsage = float(a[24])
+                deviceID = [25]
+                deviceIp = a[26]
+                deviceName = a[27]
+                distance = float(a[28])
+                dtCreate = a[29]
+                essid = a[30]
+                evm = float(a[31])
+                firmwareVersion = a[32]
+                freq = float(a[33])
+                gpsFixed = float(a[34])
+                lanIpAddress = a[35]
+                lanPlugged = float(a[36])
+                lanRxBytes = float(a[37])
+                lanRxErrors = float(a[38])
+                lanRxPackets = float(a[39])
+                lanSpeed = a[40]
+                lanTxBytes = float(a[41])
+                lanTxErrors = float(a[42])
+                lanTxPackets = float(a[43])
+                latitude = a[44]
+                loadavg = float(a[45])
+                longitude = a[46]
+                memBuffers = float(a[47])
+                memFree = float(a[48])
+                memTotal = float(a[49])
+                noise = float(a[50])
+                platform = a[51]
+                remoteIP = a[52]
+                remoteMac = a[53]
+                rxModRate = a[54]
+                signal = float(a[55])
+                status_flags = float(a[56])
+                txModRate = a[57]
+                uptime = float(a[58])
+                wlanConnections = float(a[59])
+                wlanDownlinkCapacity = float(a[60])
+                wlanIpAddress = float(a[61])
+                wlanOpmode = a[62]
+                wlanPolling = float(a[63])
+                wlanRxBytes = float(a[64])
+                wlanRxErrBmiss = float(a[65])
+                wlanRxErrCrypt = float(a[66])
+                wlanRxErrFrag = float(a[67])
+                wlanRxErrNwid = float(a[68])
+                wlanRxErrors = float(a[69])
+                wlanRxErrOther = float(a[70])
+                wlanRxErrRetries = float(a[71])
+                wlanRxPackets = float(a[72])
+                wlanRxRate = float(a[73])
+                wlanTxBytes = float(a[74])
+                wlanTxErrors = float(a[75])
+                wlanTxLatency = float(a[76])
+                wlanTxPackets = float(a[77])
+                wlanTxRate = float(a[78])
+                wlanUplinkCapacity= float(a[79])
+            count += 1
+        
+        self.output_file.Write()
+        self.output_file.Close()
+    
+            
+            
+if __name__ == '__main__':
+    #if len(sys.argv) < 2:
+    #    print("Usage: %s file_to_parse.dat" % sys.argv[0])
+    #    sys.exit(1)
+    #parse_CSV_file_with_TTree_ReadStream("example_tree", sys.argv[1])
+    MyT = MyTree(tree_name = "example_tree", afile = "/Users/klein/LCWA/data/sandbox.csv")
+    MyT.CreateTree1()
+    #MyT.FillTree()
+        

@@ -35,7 +35,7 @@ gROOT.ProcessLine(
            Char_t           remoteMac[20];\
            Char_t           rxModRate[20];\
            Char_t           txModRate[20];\
-           Char_t            wlanIpAddress;\
+           Char_t            wlanIpAddress[20];\
            Char_t            wlanOpmode[15];\
                                         };" );
    
@@ -141,6 +141,7 @@ class MyTree(object):
         wlanTxPackets =  array('f',[0]) 
         wlanTxRate =  array('f',[0]) 
         wlanUplinkCapacity =  array('f',[0])     
+
     
         self.output_tree.Branch("iddevicedetail",iddevicedetail,'iddevicedetail/F')
         self.output_tree.Branch("afDuplex",addressof(info,'afDuplex'),'afDuplex/C')
@@ -222,7 +223,7 @@ class MyTree(object):
         self.output_tree.Branch("wlanTxPackets",wlanTxPackets,'wlanTxPackets/F')
         self.output_tree.Branch("wlanTxRate",wlanTxRate,'wlanTxRate/F')
         self.output_tree.Branch("wlanUplinkCapacity",wlanUplinkCapacity,'wlanUplinkCapacity/F')
- 
+
         count = 0
             
         for line in (self.file_lines):
@@ -235,85 +236,85 @@ class MyTree(object):
                         a[p]='0.0'
                     
                     
-                iddevicedetail = float(a[0])
-                afDuplex = a[1]
-                afLinkState = a[2]
-                afOpmode = a[3]
-                afRxcapacity = float(a[4])
-                afRxchanbw = float(a[5])
-                afRxfreq = float(a[6])
-                afRxpower0 = float(a[7])
-                afRxpower1 = float(a[8])
-                afTxcapacity = float(a[9])
-                afTxchanbw = float(a[10])
-                afTxfreq = float(a[11])
-                afTxmodrate = a[12]
-                afTxpower = float(a[13])
-                afTxpowerEirp = float(a[14])
-                airTime = float(a[15])
-                altitude = float(a[16])
-                apMac = a[17]
-                boardCrc = a[18]
-                cfgCrc = a[19]
-                chain0Signal = float(a[20])
-                chain1Signal = float(a[21])
-                chanbw = float(a[22])
-                cinr = float(a[23])
-                cpuUsage = float(a[24])
-                deviceID = [25]
-                deviceIp = a[26]
-                deviceName = a[27]
-                distance = float(a[28])
-                dtCreate = a[29]
-                essid = a[30]
-                evm = float(a[31])
-                firmwareVersion = a[32]
-                freq = float(a[33])
-                gpsFixed = float(a[34])
-                lanIpAddress = a[35]
-                lanPlugged = float(a[36])
-                lanRxBytes = float(a[37])
-                lanRxErrors = float(a[38])
-                lanRxPackets = float(a[39])
-                lanSpeed = a[40]
-                lanTxBytes = float(a[41])
-                lanTxErrors = float(a[42])
-                lanTxPackets = float(a[43])
-                latitude = a[44]
-                loadavg = float(a[45])
-                longitude = a[46]
-                memBuffers = float(a[47])
-                memFree = float(a[48])
-                memTotal = float(a[49])
-                noise = float(a[50])
-                platform = a[51]
-                remoteIP = a[52]
-                remoteMac = a[53]
-                rxModRate = a[54]
-                signal = float(a[55])
-                status_flags = float(a[56])
-                txModRate = a[57]
-                uptime = float(a[58])
-                wlanConnections = float(a[59])
-                wlanDownlinkCapacity = float(a[60])
-                wlanIpAddress = a[61]
-                wlanOpmode = a[62]
-                wlanPolling = float(a[63])
-                wlanRxBytes = float(a[64])
-                wlanRxErrBmiss = float(a[65])
-                wlanRxErrCrypt = float(a[66])
-                wlanRxErrFrag = float(a[67])
-                wlanRxErrNwid = float(a[68])
-                wlanRxErrors = float(a[69])
-                wlanRxErrOther = float(a[70])
-                wlanRxErrRetries = float(a[71])
-                wlanRxPackets = float(a[72])
-                wlanRxRate = float(a[73])
-                wlanTxBytes = float(a[74])
-                wlanTxErrors = float(a[75])
-                wlanTxLatency = float(a[76])
-                wlanTxPackets = float(a[77])
-                wlanTxRate = float(a[78])
+                iddevicedetail[0] = float(a[0])
+                info.afDuplex = a[1]
+                info.afLinkState = a[2]
+                info.afOpmode = a[3]
+                afRxcapacity[0] = float(a[4])
+                afRxchanbw[0] = float(a[5])
+                afRxfreq[0] = float(a[6])
+                afRxpower0[0] = float(a[7])
+                afRxpower1[0] = float(a[8])
+                afTxcapacity[0] = float(a[9])
+                afTxchanbw[0] = float(a[10])
+                afTxfreq[0] = float(a[11])
+                info.afTxmodrate = a[12]
+                afTxpower[0] = float(a[13])
+                afTxpowerEirp[0] = float(a[14])
+                airTime[0] = float(a[15])
+                altitude[0] = float(a[16])
+                info.apMac = a[17]
+                info.boardCrc = a[18]
+                info.cfgCrc = a[19]
+                chain0Signal[0] = float(a[20])
+                chain1Signal[0] = float(a[21])
+                chanbw[0] = float(a[22])
+                cinr[0] = float(a[23])
+                cpuUsage[0] = float(a[24])
+                info.deviceID = a[25]
+                info.deviceIp = a[26]
+                info.deviceName = a[27]
+                distance[0] = float(a[28])
+                info.dtCreate = a[29]
+                info.essid = a[30]
+                evm[0] = float(a[31])
+                info.firmwareVersion = a[32]
+                freq[0] = float(a[33])
+                gpsFixed[0] = float(a[34])
+                info.lanIpAddress = a[35]
+                lanPlugged[0] = float(a[36])
+                lanRxBytes[0] = float(a[37])
+                lanRxErrors[0] = float(a[38])
+                lanRxPackets[0] = float(a[39])
+                info.lanSpeed = a[40]
+                lanTxBytes[0] = float(a[41])
+                lanTxErrors[0] = float(a[42])
+                lanTxPackets[0] = float(a[43])
+                info.latitude = a[44]
+                loadavg[0] = float(a[45])
+                info.longitude = a[46]
+                memBuffers[0] = float(a[47])
+                memFree[0] = float(a[48])
+                memTotal[0] = float(a[49])
+                noise[0] = float(a[50])
+                info.platform = a[51]
+                info.remoteIP = a[52]
+                info.remoteMac = a[53]
+                info.rxModRate = a[54]
+                signal[0] = float(a[55])
+                status_flags[0] = float(a[56])
+                info.txModRate = a[57]
+                uptime[0] = float(a[58])
+                wlanConnections[0] = float(a[59])
+                wlanDownlinkCapacity[0] = float(a[60])
+                info.wlanIpAddress = a[61]
+                info.wlanOpmode = a[62]
+                wlanPolling[0] = float(a[63])
+                wlanRxBytes[0] = float(a[64])
+                wlanRxErrBmiss[0] = float(a[65])
+                wlanRxErrCrypt[0] = float(a[66])
+                wlanRxErrFrag[0] = float(a[67])
+                wlanRxErrNwid[0] = float(a[68])
+                wlanRxErrors[0] = float(a[69])
+                wlanRxErrOther[0] = float(a[70])
+                wlanRxErrRetries[0] = float(a[71])
+                wlanRxPackets[0] = float(a[72])
+                wlanRxRate[0] = float(a[73])
+                wlanTxBytes[0] = float(a[74])
+                wlanTxErrors[0] = float(a[75])
+                wlanTxLatency[0] = float(a[76])
+                wlanTxPackets[0] = float(a[77])
+                wlanTxRate[0] = float(a[78])
                 wlanUplinkCapacity= float(a[79]) 
                 
                 self.output_tree.Fill()    
@@ -333,4 +334,11 @@ if __name__ == '__main__':
     MyT = MyTree(tree_name = "example_tree", afile = "/Users/klein/LCWA/data/sandbox.csv")
     MyT.CreateTree1()
     #MyT.FillTree()
-        
+
+
+
+
+
+# crap
+
+         

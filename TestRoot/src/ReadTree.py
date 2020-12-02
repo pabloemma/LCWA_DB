@@ -12,6 +12,7 @@ from os.path import expanduser
 
 
 import sys
+import json # needed for reading in cutfiles. They are written as a dictionary
 
 class MyReadTree(object):
     '''
@@ -71,9 +72,9 @@ class MyReadTree(object):
         self.c1.cd()
         
         if(cut_expression != None):
-            self.mychain.Draw(variable,self.MakeCut(cut_expression))
+            self.mychain.Draw(variable,self.MakeCut(self.cutlist[cut_expression]))
         else:
-            self.mychain.Draw(variable,self.cutlist[0])
+            self.mychain.Draw(variable)
         
         self.c1.Modified()
         self.c1.Update()
@@ -86,6 +87,17 @@ class MyReadTree(object):
         self.c1=TCanvas('c1','LCWA Canvas', 200, 10, 700, 500 ) 
         return
  
+
+    def ReadCutList1(self,cutfile):
+        if path.exists(self.myhome+cutfile):
+            with open(self.myhome+cutfile) as f:
+                data=f.read()
+            self.cutlist=json.loads(data)
+            print(self.cutlist)
+        else:
+            self.ErrorHandle(1,info=cutfile)
+    
+        
     def ReadCutList(self,cutfile):
         self.cutlist = []  # list of cuts
         
@@ -149,10 +161,10 @@ if __name__ == '__main__':
     MyT.ReadTree()
     MyT.GetBranchList()
     
-    MyT.ReadCutList("LCWA/data/cutlist.txt")
+    MyT.ReadCutList1("LCWA/data/cutlist.txt")
     
     
-    MyT.DrawVariable("wlanRxBytes","wlanRxBytes>1e12")
+    MyT.DrawVariable("wlanRxBytes","test3")
     
     #MyT.FillTree()
                     

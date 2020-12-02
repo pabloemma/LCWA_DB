@@ -8,6 +8,7 @@ import ROOT as RO
 from ROOT import  TFile, TCut, TCanvas
 
 from os import path 
+from os.path import expanduser
 
 
 import sys
@@ -29,7 +30,12 @@ class MyReadTree(object):
             self.ErrorHandle(0,info=rootfile)
          
         # Create default Canvas
-        self.MakeCanvas()   
+        self.MakeCanvas() 
+        
+        
+        # get home directory
+
+        self.myhome = expanduser("~") +'/' 
             
     def ReadTree(self):
         
@@ -61,13 +67,13 @@ class MyReadTree(object):
         return c1
     
     def DrawVariable(self,variable,cut_expression = None):
-
+        #1 dimensional drawing
         self.c1.cd()
         
         if(cut_expression != None):
             self.mychain.Draw(variable,self.MakeCut(cut_expression))
         else:
-            self.mychain.Draw(variable)
+            self.mychain.Draw(variable,self.cutlist[0])
         
         self.c1.Modified()
         self.c1.Update()
@@ -75,6 +81,35 @@ class MyReadTree(object):
 
 
 
+    def MakeCanvas(self):
+        
+        self.c1=TCanvas('c1','LCWA Canvas', 200, 10, 700, 500 ) 
+        return
+ 
+    def ReadCutList(self,cutfile):
+        self.cutlist = []  # list of cuts
+        
+        #open cutfile
+        if path.exists(self.myhome+cutfile):
+            ftemp = open(self.myhome+cutfile,'r')
+            
+            count = 0
+            # now read every line
+            while True:
+                count += 1
+                line = ftemp.readline()
+                
+                if not line:
+                    break # end of file
+                
+                self.cutlist.append(line)
+                
+            ftemp.close()
+        
+        else:
+            self.ErrorHandle(1,info=cutfile)
+ 
+        
     def ErrorHandle(self,count,info=None):
         """
         Prints out error message and perfoms action
@@ -88,6 +123,7 @@ class MyReadTree(object):
         
         message =[500]
         message[0] = 'Problem with rootfile'
+        message[1] = 'Problem with Cutfile'
         
         errstr = 'LCWA_c error number > '
         
@@ -100,21 +136,22 @@ class MyReadTree(object):
         else:
             return
     
-    def MakeCanvas(self):
         
-        self.c1=TCanvas('c1','LCWA Canvas', 200, 10, 700, 500 ) 
-        return
- 
+        
 
 if __name__ == '__main__':
     #if len(sys.argv) < 2:
     #    print("Usage: %s file_to_parse.dat" % sys.argv[0])
     #    sys.exit(1)
     #parse_CSV_file_with_TTree_ReadStream("example_tree", sys.argv[1])
+    
     MyT = MyReadTree("/Users/klein/LCWA/data/device_detail.root")
     MyT.ReadTree()
     MyT.GetBranchList()
-    #MyT.DrawVariable("wlanRxBytes")
+    
+    MyT.ReadCutList("LCWA/data/cutlist.txt")
+    
+    
     MyT.DrawVariable("wlanRxBytes","wlanRxBytes>1e12")
     
     #MyT.FillTree()

@@ -4,7 +4,8 @@ Created on Dec 2, 2020
 @author: klein
 '''
 
-from ROOT import  TFile
+import ROOT as RO
+from ROOT import  TFile, TCut, TCanvas
 
 from os import path 
 
@@ -26,7 +27,9 @@ class MyReadTree(object):
             self.myrootfile = TFile(rootfile,"r")
         else:
             self.ErrorHandle(0,info=rootfile)
-            
+         
+        # Create default Canvas
+        self.MakeCanvas()   
             
     def ReadTree(self):
         
@@ -37,6 +40,39 @@ class MyReadTree(object):
         print(' We have ',self.myentries,' entries')
 
         return
+    
+    def GetBranchList(self):
+        """ Get list of branches"""
+        self.Blist = []
+
+        self.branches_list = self.mychain.GetListOfBranches() #this is an iterator TobjArray
+
+        
+        for k in range(0,len(self.branches_list)):
+            self.Blist.append(self.branches_list.At(k).GetName())
+        
+        print(self.Blist)
+     
+    
+    def MakeCut(self,cut_expression):
+        """ create cuts for selection"""
+        c1 = TCut(cut_expression)
+        
+        return c1
+    
+    def DrawVariable(self,variable,cut_expression = None):
+
+        self.c1.cd()
+        
+        if(cut_expression != None):
+            self.mychain.Draw(variable,self.MakeCut(cut_expression))
+        else:
+            self.mychain.Draw(variable)
+        
+        self.c1.Modified()
+        self.c1.Update()
+        RO.gApplication.Run()  
+
 
 
     def ErrorHandle(self,count,info=None):
@@ -64,7 +100,11 @@ class MyReadTree(object):
         else:
             return
     
-
+    def MakeCanvas(self):
+        
+        self.c1=TCanvas('c1','LCWA Canvas', 200, 10, 700, 500 ) 
+        return
+ 
 
 if __name__ == '__main__':
     #if len(sys.argv) < 2:
@@ -73,5 +113,9 @@ if __name__ == '__main__':
     #parse_CSV_file_with_TTree_ReadStream("example_tree", sys.argv[1])
     MyT = MyReadTree("/Users/klein/LCWA/data/device_detail.root")
     MyT.ReadTree()
+    MyT.GetBranchList()
+    #MyT.DrawVariable("wlanRxBytes")
+    MyT.DrawVariable("wlanRxBytes","wlanRxBytes>1e12")
+    
     #MyT.FillTree()
                     

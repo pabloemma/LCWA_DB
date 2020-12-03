@@ -39,34 +39,6 @@ class MyReadTree(object):
 
         self.myhome = expanduser("~") +'/' 
             
-    def ReadTree(self):
-        
-         #Get Number of entries:
-        self.mychain = self.myrootfile.Get('example_tree')
-        self.myentries = self.mychain.GetEntriesFast()
-        
-        print(' We have ',self.myentries,' entries')
-
-        return
-    
-    def GetBranchList(self):
-        """ Get list of branches"""
-        self.Blist = []
-
-        self.branches_list = self.mychain.GetListOfBranches() #this is an iterator TobjArray
-
-        
-        for k in range(0,len(self.branches_list)):
-            self.Blist.append(self.branches_list.At(k).GetName())
-        
-        print(self.Blist)
-     
-    
-    def MakeCut(self,cut_expression):
-        """ create cuts for selection"""
-        c1 = TCut(cut_expression)
-        
-        return c1
     
     def DrawVariable(self,variable,cut_expression = None):
         #1 dimensional drawing
@@ -82,11 +54,38 @@ class MyReadTree(object):
         RO.gApplication.Run()  
 
 
+    def GetBranchList(self):
+        """ Get list of branches"""
+        self.Blist = []
+
+        self.branches_list = self.mychain.GetListOfBranches() #this is an iterator TobjArray
+
+        
+        for k in range(0,len(self.branches_list)):
+            self.Blist.append(self.branches_list.At(k).GetName())
+        
+        print(self.Blist)
+     
+    
+
+    
+    def GetTimeStamp(self,mytime):
+        """calculates the unix time stamp"""
+        temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
+        print(temp)
+        return temp
+
 
     def MakeCanvas(self):
         
         self.c1=TCanvas('c1','LCWA Canvas', 200, 10, 700, 500 ) 
         return
+
+    def MakeCut(self,cut_expression):
+        """ create cuts for selection"""
+        c1 = TCut(cut_expression)
+        
+        return c1
  
 
     def ReadCutList(self,cutfile):
@@ -97,7 +96,18 @@ class MyReadTree(object):
             print(self.cutlist)
         else:
             self.ErrorHandle(1,info=cutfile)
-            
+
+    def ReadTree(self):
+        
+         #Get Number of entries:
+        self.mychain = self.myrootfile.Get('example_tree')
+        self.myentries = self.mychain.GetEntriesFast()
+        
+        print(' We have ',self.myentries,' entries')
+
+        return
+    
+           
     def ScanVar(self,var,colsize=None):
         """ scans the tree for specific variable"""
 
@@ -109,11 +119,9 @@ class MyReadTree(object):
             self.mychain.Scan(var,"",width)
         return
     
-    def GetTimeStamp(self,mytime):
-        """calculates the unix time stamp"""
-        temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
-        print(temp)
-        return temp
+ 
+ #here are the utilities functions
+ 
         
     def ErrorHandle(self,count,info=None):
         """

@@ -10,7 +10,8 @@ from ROOT import  TFile, TCut, TCanvas
 from os import path 
 from os.path import expanduser
 
-
+import time
+import datetime
 import sys
 import json # needed for reading in cutfiles. They are written as a dictionary
 
@@ -88,7 +89,7 @@ class MyReadTree(object):
         return
  
 
-    def ReadCutList1(self,cutfile):
+    def ReadCutList(self,cutfile):
         if path.exists(self.myhome+cutfile):
             with open(self.myhome+cutfile) as f:
                 data=f.read()
@@ -96,31 +97,23 @@ class MyReadTree(object):
             print(self.cutlist)
         else:
             self.ErrorHandle(1,info=cutfile)
-    
-        
-    def ReadCutList(self,cutfile):
-        self.cutlist = []  # list of cuts
-        
-        #open cutfile
-        if path.exists(self.myhome+cutfile):
-            ftemp = open(self.myhome+cutfile,'r')
             
-            count = 0
-            # now read every line
-            while True:
-                count += 1
-                line = ftemp.readline()
-                
-                if not line:
-                    break # end of file
-                
-                self.cutlist.append(line)
-                
-            ftemp.close()
-        
+    def ScanVar(self,var,colsize=None):
+        """ scans the tree for specific variable"""
+
+        if colsize == None:
+            self.mychain.Scan(var)
         else:
-            self.ErrorHandle(1,info=cutfile)
- 
+            width ="colsize="+str(colsize)
+            #make sure you don't have a sapce between the colsize and the = sign
+            self.mychain.Scan(var,"",width)
+        return
+    
+    def GetTimeStamp(self,mytime):
+        """calculates the unix time stamp"""
+        temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
+        print(temp)
+        return temp
         
     def ErrorHandle(self,count,info=None):
         """
@@ -161,10 +154,11 @@ if __name__ == '__main__':
     MyT.ReadTree()
     MyT.GetBranchList()
     
-    MyT.ReadCutList1("LCWA/data/cutlist.txt")
+    MyT.ReadCutList("LCWA/data/cutlist.txt")
     
-    
-    MyT.DrawVariable("wlanRxBytes","test3")
+    MyT.ScanVar("dtCreate", colsize=40)
+    MyT.GetTimeStamp("2016-12-14 22:58:47")
+    MyT.DrawVariable("lanRxBytes","mydevice")
     
     #MyT.FillTree()
                     

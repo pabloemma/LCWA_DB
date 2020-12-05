@@ -5,7 +5,7 @@ Created on Dec 2, 2020
 '''
 
 import ROOT as RO
-from ROOT import  TFile, TCut, TCanvas, TH1F,TH2F
+from ROOT import  TFile, TCut, TCanvas, TH1F,TH2F,gApplication,gROOT
 #import strucDef
 import array
 
@@ -30,7 +30,7 @@ class MyReadTree(object):
         '''
         Constructor
         '''
-        
+        gROOT.Reset()
         if path.exists(rootfile):
             self.myrootfile = TFile(rootfile,"r")
         else:
@@ -44,7 +44,6 @@ class MyReadTree(object):
 
         self.myhome = expanduser("~") +'/' 
  
-#        RO.gApplication.Run() 
         self.histo1 = []  #list of one dimensional histos
         self.histo100 = [] #list of two dimensional histos
            
@@ -84,40 +83,56 @@ class MyReadTree(object):
         
     def DrawVariable(self,variable,cut_expression = None):
         #1 dimensional drawing
-        self.c1.cd()
+        self.c3=TCanvas('c3','LCWA3 Canvas', 950, 10, 700, 500 ) 
+
+        self.c3.cd()
         
         if(cut_expression != None):
             self.mychain.Draw(variable,self.MakeCut(self.cutlist[cut_expression]))
         else:
             self.mychain.Draw(variable)
          
-        self.c1.Modified()
-        self.c1.Update()
+        self.c3.Modified()
+        self.c3.Update()
+
+    def DrawVariable2(self,variable1,cut_expression = None):
+        #1 dimensional drawing
+        self.c4=TCanvas('c4','LCWA4 Canvas', 950, 600, 700, 500 ) 
+
+        self.c4.cd()
+        
+        if(cut_expression != None):
+            self.mychain.Draw(variable1,self.MakeCut(self.cutlist[cut_expression]))
+        else:
+            self.mychain.Draw(variable)
+         
+        self.c4.Modified()
+        self.c4.Update()
 
     def DrawHisto(self):
         """ draws the one and two dimensional histos"""
-        
         self.c1.Draw()
+
+
     
   
   
-        for k in self.histo100:
-            self.c1.cd()
-            self.c1.Draw()
-            k.Draw()
-            self.c1.Modified()
-            self.c1.Update()
-            a = input("press any character to continue")
-
         for k in self.histo1:
             self.c1.cd()
             self.c1.Draw()
             k.Draw()
             self.c1.Modified()
             self.c1.Update()
-            a = input("press any character to continue")
-        
-           
+            #a = input("press any character to continue")
+
+        for k in self.histo100:
+            self.c2.cd()
+            self.c2.Draw()
+            k.Draw()
+            self.c2.Modified()
+            self.c2.Update()
+            #a = input("press any character to continue")
+            
 
     def GetBranchList(self):
         """ Get list of branches"""
@@ -165,8 +180,9 @@ class MyReadTree(object):
  
     def MakeCanvas(self):
         
-        self.c1=TCanvas('c1','LCWA Canvas', 200, 10, 700, 500 ) 
-        self.c1.Draw()
+        self.c1=TCanvas('c1','LCWA1 Canvas', 200, 10, 700, 500 ) 
+ 
+        self.c2=TCanvas('c2','LCWA2 Canvas', 200, 600, 700, 500 ) 
         return
 
     def MakeCut(self,cut_expression):
@@ -261,8 +277,8 @@ class MyReadTree(object):
 if __name__ == '__main__':
 
     import ROOT
-#    ROOT.gROOT.Reset()
-#    appi=ROOT.gApplication
+    ROOT.gROOT.Reset()
+    appi=ROOT.gApplication
     
     MyT = MyReadTree("/Users/klein/LCWA/data/device_detail_sh1.root")
  
@@ -282,7 +298,7 @@ if __name__ == '__main__':
     MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
     MyT.DrawHisto()
     #MyT.CloseApp()
-    #MyT.DrawVariable("lanTxBytes","mydevice")
+    MyT.DrawVariable("lanTxBytes","mydevice")
+    MyT.DrawVariable2("lanTxBytes:lanRxBytes","mydevice")
     #MyT.FillTree()
-#    appi.Run()
-                
+    appi.Run()            

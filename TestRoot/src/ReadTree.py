@@ -43,77 +43,44 @@ class MyReadTree(object):
         # get home directory
 
         self.myhome = expanduser("~") +'/' 
-            
-    
+ 
+#        RO.gApplication.Run() 
+        self.histo1 = []  #list of one dimensional histos
+        self.histo100 = [] #list of two dimensional histos
+           
+    def CloseApp(self):
+        
+        self.application.Terminate()
  
     def CreateHisto11(self,variable,name='histo1',title='histo1',nchan=50,lowx=0.,highx=1000.):
         h1 = TH1F(name,title,nchan,lowx,highx)
         for entry in self.mychain:
             if self.GetTimeStamp(entry.dtCreate)>self.timecut[0] and self.GetTimeStamp(entry.dtCreate)<self.timecut[1]:
                 exec('h1.Fill(entry.%s)' % variable)
-                self.c1.cd()
-        h1.Draw()
-        self.c1.Modified()
-        self.c1.Update()
-        RO.gApplication.Run()  
+        #self.c1.cd()
+        #h1.Draw()
+        #self.c1.Modified()
+        #self.c1.Update()
+        
+        #a = input("press any character to continue")
+        self.histo1.append(h1)
+         
 
-    def CreateHisto22(self,variable1,variable2,name='histo1',title='histo1',nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12):
+    def CreateHisto22(self,variable1,variable2,name='histo100',title='histo100',nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12):
         h100 = TH2F(name,title,nchan,lowx,highx,nchan1,lowx1,highx1)
         for entry in self.mychain:
+#
+#            print(entry.dtCreate)
             if self.GetTimeStamp(entry.dtCreate)>self.timecut[0] and self.GetTimeStamp(entry.dtCreate)<self.timecut[1]:
                 exec('h100.Fill(entry.%s,entry.%s)' % (variable1 , variable2))
-        h100.Draw()
-        self.c1.Modified()
-        self.c1.Update()
-        RO.gApplication.Run()  
+        #h100.Draw()
+        #self.c1.Modified()
+        #self.c1.Update()
 
+            
+        self.histo100.append(h100)
  
     
-    def CreateHisto1(self,variable,name='histo1',title='histo1',nchan=50,lowx=0.,highx=1000.):
-
-        # here a solution from Kun for this problem wit passing variable
-        var = array.array('f', [])  # create an empty array with type float,  similar thing can be done for dtCreate using type b if you need to apply cut
-        self.mychain.SetBranchAddress(variable, var)
-             
-        h1 = TH1F(name,title,nchan,lowx,highx)
-        # now loop over tree
-        for k in range(self.myentries):
-            #self.mychain.GetEntry(k)    
-            #if(self.GetTimeStamp(self.mychain.dtCreate)>self.timecut[0] and \
-            #self.GetTimeStamp(self.mychain.dtCreate)<self.timecut[1]):
-            h1.Fill(var[0])
-
-        self.c1.cd()
-        h1.Draw()
-        self.c1.Modified()
-        self.c1.Update()
-
-                
-        return h1
-        
-    def CreateHisto2(self,variable1,variable2,name='histo100',title='histo100',nchan=50,lowx=0.,highx=1000.,nchan1=50,lowx1=0.,highx1=1000.):
-
-        
-        h100 = TH2F(name,title,nchan,lowx,highx,nchan1,lowx1,highx1)
-        
-        # now loop over tree
-        for k in range(0,self.myentries):
-            self.mychain.GetEntry(k)    
-            if(self.GetTimeStamp(self.mychain.dtCreate)>self.timecut[0] and \
-            self.GetTimeStamp(self.mychain.dtCreate)<self.timecut[1] and \
-            self.mychain.deviceName == 'LosHornos5'):
-                #print(self.mychain.lanTxBytes)
-                h100.Fill(self.mychain.lanTxBytes,self.mychain.lanRxBytes)
-
-        self.c1.cd()
-        h100.Draw()
-        self.c1.Modified()
-        self.c1.Update()
-        RO.gApplication.Run()  
-
-                
-        return h100
-      
         
     def DrawVariable(self,variable,cut_expression = None):
         #1 dimensional drawing
@@ -126,8 +93,31 @@ class MyReadTree(object):
          
         self.c1.Modified()
         self.c1.Update()
-        RO.gApplication.Run()  
 
+    def DrawHisto(self):
+        """ draws the one and two dimensional histos"""
+        
+        self.c1.Draw()
+    
+  
+  
+        for k in self.histo100:
+            self.c1.cd()
+            self.c1.Draw()
+            k.Draw()
+            self.c1.Modified()
+            self.c1.Update()
+            a = input("press any character to continue")
+
+        for k in self.histo1:
+            self.c1.cd()
+            self.c1.Draw()
+            k.Draw()
+            self.c1.Modified()
+            self.c1.Update()
+            a = input("press any character to continue")
+        
+           
 
     def GetBranchList(self):
         """ Get list of branches"""
@@ -176,6 +166,7 @@ class MyReadTree(object):
     def MakeCanvas(self):
         
         self.c1=TCanvas('c1','LCWA Canvas', 200, 10, 700, 500 ) 
+        self.c1.Draw()
         return
 
     def MakeCut(self,cut_expression):
@@ -268,18 +259,20 @@ class MyReadTree(object):
         
 
 if __name__ == '__main__':
-    #if len(sys.argv) < 2:
-    #    print("Usage: %s file_to_parse.dat" % sys.argv[0])
-    #    sys.exit(1)
-    #parse_CSV_file_with_TTree_ReadStream("example_tree", sys.argv[1])
+
+    import ROOT
+#    ROOT.gROOT.Reset()
+#    appi=ROOT.gApplication
     
-    MyT = MyReadTree("/Users/klein/LCWA/data/device_detail.root")
+    MyT = MyReadTree("/Users/klein/LCWA/data/device_detail_sh1.root")
+ 
     MyT.ReadTree()
     MyT.GetBranchList()
-    MyT.MakeTimeCut(time_low="2017-12-14 22:58:47", time_high="2018-12-14 22:58:47")
+    MyT.MakeTimeCut(time_low="2020-06-21 00:32:51", time_high="2020-12-21 00:32:51")
     #MyT.DrawVariable("lanRxBytes")
-    #MyT.CreateHisto11('lanTxBytes',name = 'histo1',title = "lanTxBytes",nchan=500,lowx=0.,highx=1.e12)
-    MyT.CreateHisto22('lanTxBytes','lanRxBytes',name = 'histo1',title = "lanTxBytes",nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12)
+
+    MyT.CreateHisto11('lanTxBytes',name = 'histo1',title = "lanTxBytes",nchan=50,lowx=0.,highx=1.e12)
+    MyT.CreateHisto22('lanTxBytes','lanRxBytes',name = 'histo100',title = "lanTxBytes vs lanRXBytes",nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12)
 
     MyT.ReadCutList("LCWA/data/cutlist.txt")
     
@@ -287,7 +280,9 @@ if __name__ == '__main__':
     #MyT.GetTimeStamp("2016-12-14 22:58:47")
     MyT.GetNameFromIP("172.16.8.8")
     MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
+    MyT.DrawHisto()
+    #MyT.CloseApp()
     #MyT.DrawVariable("lanTxBytes","mydevice")
-    
     #MyT.FillTree()
-                    
+#    appi.Run()
+                

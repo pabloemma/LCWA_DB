@@ -8,6 +8,7 @@ Running version
 import ROOT
 from ROOT import TFile, TTree, gROOT, addressof 
 import os
+import sys
 #import numpy as np
 from array  import array
 
@@ -79,7 +80,7 @@ class MyTree(object):
             else: 
                 self.file_lines.append(line)
          
-        
+        self.sign = 'LCWA_c> '
      
     def CreateTree1(self):
         info = ROOT.info_t()
@@ -227,10 +228,12 @@ class MyTree(object):
         count = 0
             
         for line in (self.file_lines):
-            if(count>0):
+            if(count> 0):
                 a=line.split(',')
-                a[79] = a[79].strip('\n')
-                
+                try:
+                    a[79] = a[79].strip('\n')
+                except:
+                    print(count)
                 for p in range(0,len(a)):
                     if(a[p] ==''):
                         a[p]='0.0'
@@ -315,7 +318,7 @@ class MyTree(object):
                 wlanTxLatency[0] = float(a[76])
                 wlanTxPackets[0] = float(a[77])
                 wlanTxRate[0] = float(a[78])
-                wlanUplinkCapacity= float(a[79]) 
+                wlanUplinkCapacity[0]= float(a[79]) 
                 
                 self.output_tree.Fill()    
 
@@ -324,16 +327,15 @@ class MyTree(object):
         self.output_file.Write()
         self.output_file.Close()
     
-            
+     
             
 if __name__ == '__main__':
     #if len(sys.argv) < 2:
     #    print("Usage: %s file_to_parse.dat" % sys.argv[0])
     #    sys.exit(1)
     #parse_CSV_file_with_TTree_ReadStream("example_tree", sys.argv[1])
-    MyT = MyTree(tree_name = "example_tree", afile = "/Users/klein/LCWA/data/sandbox.csv")
+    MyT = MyTree(tree_name = "example_tree", afile = "/Users/klein/LCWA/data/new/devicedetail.csv")
     MyT.CreateTree1()
-    #MyT.FillTree()
 
 
 

@@ -7,7 +7,7 @@ Created on Dec 2, 2020
 import ROOT as RO
 from ROOT import  TFile, TCut, TCanvas, TH1F,TH2F,gApplication,gROOT
 #import strucDef
-import array
+from array import array
 
 
 
@@ -46,7 +46,9 @@ class MyReadTree(object):
  
         self.histo1 = []  #list of one dimensional histos
         self.histo100 = [] #list of two dimensional histos
-           
+        self.graph1 = []  #list of one dimensional histos for tx and rx
+        self.graph200 = [] #list of two dimensional histos
+            
     def CloseApp(self):
         
         self.application.Terminate()
@@ -94,6 +96,8 @@ class MyReadTree(object):
          
         self.c3.Modified()
         self.c3.Update()
+        
+      
 
     def DrawVariable2(self,variable1,cut_expression = None):
         #1 dimensional drawing
@@ -104,33 +108,45 @@ class MyReadTree(object):
         if(cut_expression != None):
             self.mychain.Draw(variable1,self.MakeCut(self.cutlist[cut_expression]))
         else:
-            self.mychain.Draw(variable)
+            self.mychain.Draw(variable1)
          
         self.c4.Modified()
         self.c4.Update()
 
     def DrawHisto(self):
         """ draws the one and two dimensional histos"""
-        self.c1.Draw()
+        #self.c1.Draw()
 
 
     
-  
-  
-        for k in self.histo1:
-            self.c1.cd()
-            self.c1.Draw()
-            k.Draw()
-            self.c1.Modified()
-            self.c1.Update()
+        count = 0
+        self.c1.Divide(2,2,0,0)
+        #self.c1.Draw()
+        for k in self.graph1:
+            self.c1.cd(count+1)
+            #self.c1.Draw()
+            k.Draw("AP")
+            count+=1
             #a = input("press any character to continue")
-
-        for k in self.histo100:
-            self.c2.cd()
-            self.c2.Draw()
-            k.Draw()
-            self.c2.Modified()
-            self.c2.Update()
+        self.c1.Modified()
+        self.c1.Update()
+        self.c1.Draw()
+ 
+        self.c2.cd()
+        self.multigraph.Draw("AP")
+        self.mgL.Draw()
+        self.c2.Modified()
+        self.c2.Update()
+        self.c2.Draw()
+        
+        
+        
+        #for k in self.histo100:
+        #    self.c2.cd()
+        #    self.c2.Draw()
+        #    k.Draw()
+        #    self.c2.Modified()
+        #    self.c2.Update()
             #a = input("press any character to continue")
             
 
@@ -241,7 +257,117 @@ class MyReadTree(object):
             self.mychain.Scan(var,"",width)
         return
     
+    def ScanRXTX(self, devicename):
+        """print tx and RX for a give device"""
+        
+        #we loop over all the entries
+        # first we need to create a few arrays
+        time = array('f')
+        tx = array('f')
+        rx = array('f')
+        ltx = array('f')
+        lrx = array('f')
+       
+        deltaT = array('f')
+        newtime = array('f')
+        newtx = array('f')
+        newrx = array('f')
+        newltx = array('f')
+        newlrx = array('f')
+        
+        for k in range(0,self.myentries):
+            self.mychain.GetEntry(k) 
+            if(self.mychain.deviceName==devicename):
+                time.append(self.GetTimeStamp(self.mychain.dtCreate))
+
+                tx.append(self.mychain.wlanTxBytes)
+                rx.append(self.mychain.wlanRxBytes)
+                ltx.append(self.mychain.lanTxBytes)
+                lrx.append(self.mychain.lanRxBytes)
+         
+        count=0    
+        for k in range(0,len(time)-1,2):    
+            
+            deltaT.append(time[k+1] - time[k])
+            if(deltaT[count] != 0.):
+                newtime.append(deltaT[count]/2.+time[k]) # new time in the middle of the time window
+                newtx.append((tx[k+1]-tx[k])/deltaT[count]) # normalize to second
+                newrx.append((rx[k+1]-rx[k])/deltaT[count]) 
+                newltx.append((ltx[k+1]-ltx[k])/deltaT[count]) # normalize to second
+                newlrx.append((lrx[k+1]-lrx[k])/deltaT[count]) 
+                #print(newtime[count],newtx[count],newrx[count],newltx[count],newlrx[count])
+                count+=1
+                
+        # setup first one dim histo:
+        #get low x and high x
+        tlow = newtime[0]
+        thigh = newtime[len(newtime)-1]
+        nchan = 100
+        
+        
+        
+        #temp_tx = RO.TH1F(devicename+'tx',devicename+'tx',nchan,tlow,thigh)
+        #temp_rx = RO.TH1F(devicename+'rx',devicename+'rx',nchan,tlow,thigh)
+        #temp_ltx = RO.TH1F(devicename+'ltx',devicename+'ltx',nchan,tlow,thigh)
+        #temp_lrx = RO.TH1F(devicename+'lrx',devicename+'lrx',nchan,tlow,thigh)
+
+        temp_tx=RO.TGraph(len(newtime),newtime,newtx)
+        temp_rx=RO.TGraph(len(newtime),newtime,newrx)
+        temp_ltx=RO.TGraph(len(newtime),newtime,newltx)
+        temp_lrx=RO.TGraph(len(newtime),newtime,newlrx)
+        
+        # make a multigraph
+        
+        
+        # work on the graphs
+        temp_tx.SetTitle(devicename+'_wlantx')
+        temp_tx.SetMarkerColor(2)
+        temp_tx.SetMarkerStyle(21)
+        
+        temp_rx.SetTitle(devicename+'_wlanrx')
+        temp_rx.SetMarkerColor(3)
+        temp_rx.SetMarkerStyle(22)
+
+        temp_ltx.SetTitle(devicename+'_lantx')
+        temp_ltx.SetMarkerColor(4)
+        temp_ltx.SetMarkerStyle(23)
  
+        temp_lrx.SetTitle(devicename+'_lanlrx')
+        temp_lrx.SetMarkerColor(5)
+        temp_lrx.SetMarkerStyle(24)
+        
+        # Now fill the histos
+        #for k in range(0,len(newtime)-1):
+        #    temp_tx.Fill(newtime,newtx)
+        #    temp_rx.Fill(newtime,newrx)
+        #    temp_ltx.Fill(newtime,newltx)
+        #    temp_lrx.Fill(newtime,newlrx)
+            
+        self.graph1.append(temp_tx)
+        self.graph1.append(temp_rx)
+        self.graph1.append(temp_ltx)
+        self.graph1.append(temp_lrx)
+       
+       # create multigraph
+        self.multigraph = RO.TMultiGraph()
+        self.multigraph.Add(temp_tx)
+        self.multigraph.Add(temp_rx)
+        self.multigraph.Add(temp_ltx)
+        self.multigraph.Add(temp_lrx)
+        #create Legend
+        x1 = .1
+        y1 = .7 
+        x2 = .48
+        y2 = .9
+        self.mgL = RO.TLegend(x1,y1,x2,y2)
+        self.mgL.SetHeader('tx and rx on lan and wlan  '+devicename)
+        self.mgL.AddEntry(temp_tx,"wlan tx","P")
+        self.mgL.AddEntry(temp_rx,"wlan rx","P")
+        self.mgL.AddEntry(temp_ltx,"lan tx","P")
+        self.mgL.AddEntry(temp_lrx,"lan rx","P")
+       
+       
+       
  #here are the utilities functions
  
         
@@ -280,25 +406,26 @@ if __name__ == '__main__':
     ROOT.gROOT.Reset()
     appi=ROOT.gApplication
     
-    MyT = MyReadTree("/Users/klein/LCWA/data/device_detail_sh1.root")
+    MyT = MyReadTree("/Users/klein/LCWA/data/new/devicedetail.root")
  
     MyT.ReadTree()
     MyT.GetBranchList()
     MyT.MakeTimeCut(time_low="2020-06-21 00:32:51", time_high="2020-12-21 00:32:51")
     #MyT.DrawVariable("lanRxBytes")
 
-    MyT.CreateHisto11('lanTxBytes',name = 'histo1',title = "lanTxBytes",nchan=50,lowx=0.,highx=1.e12)
-    MyT.CreateHisto22('lanTxBytes','lanRxBytes',name = 'histo100',title = "lanTxBytes vs lanRXBytes",nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12)
+    #MyT.CreateHisto11('lanTxBytes',name = 'histo1',title = "lanTxBytes",nchan=50,lowx=0.,highx=1.e12)
+    #MyT.CreateHisto22('lanTxBytes','lanRxBytes',name = 'histo100',title = "lanTxBytes vs lanRXBytes",nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12)
 
     MyT.ReadCutList("LCWA/data/cutlist.txt")
+    MyT.ScanRXTX("madre-de-dios")
     
     #MyT.ScanVar("dtCreate", colsize=40)
     #MyT.GetTimeStamp("2016-12-14 22:58:47")
-    MyT.GetNameFromIP("172.16.8.8")
-    MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
+    #MyT.GetNameFromIP("172.16.8.8")
+    #MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
     MyT.DrawHisto()
     #MyT.CloseApp()
-    MyT.DrawVariable("lanTxBytes","mydevice")
-    MyT.DrawVariable2("lanTxBytes:lanRxBytes","mydevice")
+    #MyT.DrawVariable("lanTxBytes","mydevice")
+    #MyT.DrawVariable2("lanTxBytes:lanRxBytes","mydevice")
     #MyT.FillTree()
     appi.Run()            

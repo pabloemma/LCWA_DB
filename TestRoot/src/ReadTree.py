@@ -46,8 +46,10 @@ class MyReadTree(object):
  
         self.histo1 = []  #list of one dimensional histos
         self.histo100 = [] #list of two dimensional histos
-        self.graph1 = []  #list of one dimensional histos for tx and rx
-        self.graph200 = [] #list of two dimensional histos
+        self.graph1 = []  #list of one dimensional graphs for tx and rx
+        self.graph200 = [] #list of two dimensional grapsh
+        self.multig = [] #"multigraph list"
+        self.multigL = []# "legend for multigraph"
             
     def CloseApp(self):
         
@@ -113,32 +115,41 @@ class MyReadTree(object):
         self.c4.Modified()
         self.c4.Update()
 
-    def DrawHisto(self):
+    def DrawGraph(self):
         """ draws the one and two dimensional histos"""
         #self.c1.Draw()
 
 
     
-        count = 0
-        self.c1.Divide(2,2,0,0)
+        #count = 0
+        #self.c1.Divide(2,2,0,0)
         #self.c1.Draw()
-        for k in self.graph1:
-            self.c1.cd(count+1)
-            #self.c1.Draw()
-            k.Draw("AP")
-            count+=1
+        #for k in self.graph1:
+         #   self.c1.cd(count+1)
+          #  #self.c1.Draw()
+           # k.Draw("AP")
+            #count+=1
             #a = input("press any character to continue")
-        self.c1.Modified()
-        self.c1.Update()
-        self.c1.Draw()
- 
-        self.c2.cd()
-        self.multigraph.Draw("AP")
-        self.mgL.Draw()
-        self.c2.Modified()
-        self.c2.Update()
-        self.c2.Draw()
+        #self.c1.Modified()
+        #self.c1.Update()
+        #self.c1.Draw()
         
+        #open file
+        self.root_print = "/Users/klein/scratch/aaatest.pdf"
+        self.c2.Print(self.root_print+"[")
+        self.c2.Draw()
+        for k in range(0,len(self.multig)):
+            self.c2.cd()
+            self.multig[k].Draw("AP")
+            self.multigL[k].Draw()
+            self.c2.Modified()
+            self.c2.Update()
+            self.c2.Draw()
+            self.c2.Print(self.root_print)
+            
+            self.c2.Clear()
+        self.c2.Print(self.root_print+"]")
+    
         
         
         #for k in self.histo100:
@@ -163,7 +174,17 @@ class MyReadTree(object):
         print(self.Blist)
      
     
+    def GetDeviceList(self):
+        """ Takes the list of devices and creates a new one where 
+        the devices are only listed once. This will then be used to loop through all of them
+        and create the graphs"""
+        self.item_list =[]
+        
+        for k in range(0,self.myentries):
+            self.mychain.GetEntry(k) 
+            self.item_list.append(self.mychain.deviceName) if self.mychain.deviceName not in self.item_list else None    
 
+        
     
     def GetTimeStamp(self,mytime):
         """calculates the unix time stamp"""
@@ -193,7 +214,14 @@ class MyReadTree(object):
                 print(" device IP  ",self.mychain.deviceIp)
                 break
         
- 
+    def LoopScanRXTX(self):
+        """ this routine loops over 
+        all the devices and makes graphs """
+        
+        for k in self.item_list:
+            print("Creating plot for ",k)
+            self.ScanRXTX(k)
+        
     def MakeCanvas(self):
         
         self.c1=TCanvas('c1','LCWA1 Canvas', 200, 10, 700, 500 ) 
@@ -285,7 +313,12 @@ class MyReadTree(object):
                 ltx.append(self.mychain.lanTxBytes)
                 lrx.append(self.mychain.lanRxBytes)
          
-        count=0    
+        count=0 
+        #check for only one entry:
+        if(len(time)<2):
+            #print(devicename, len(time))
+            self.ErrorHandle(100, devicename)
+            return   
         for k in range(0,len(time)-1,2):    
             
             deltaT.append(time[k+1] - time[k])
@@ -297,8 +330,8 @@ class MyReadTree(object):
                 newlrx.append((lrx[k+1]-lrx[k])/deltaT[count]) 
                 #print(newtime[count],newtx[count],newrx[count],newltx[count],newlrx[count])
                 count+=1
-                
-        # setup first one dim histo:
+             
+       # setup first one dim histo:
         #get low x and high x
         tlow = newtime[0]
         thigh = newtime[len(newtime)-1]
@@ -306,18 +339,13 @@ class MyReadTree(object):
         
         
         
-        #temp_tx = RO.TH1F(devicename+'tx',devicename+'tx',nchan,tlow,thigh)
-        #temp_rx = RO.TH1F(devicename+'rx',devicename+'rx',nchan,tlow,thigh)
-        #temp_ltx = RO.TH1F(devicename+'ltx',devicename+'ltx',nchan,tlow,thigh)
-        #temp_lrx = RO.TH1F(devicename+'lrx',devicename+'lrx',nchan,tlow,thigh)
-
+ 
         temp_tx=RO.TGraph(len(newtime),newtime,newtx)
         temp_rx=RO.TGraph(len(newtime),newtime,newrx)
         temp_ltx=RO.TGraph(len(newtime),newtime,newltx)
         temp_lrx=RO.TGraph(len(newtime),newtime,newlrx)
         
         # make a multigraph
-        
         
         # work on the graphs
         temp_tx.SetTitle(devicename+'_wlantx')
@@ -335,36 +363,33 @@ class MyReadTree(object):
         temp_lrx.SetTitle(devicename+'_lanlrx')
         temp_lrx.SetMarkerColor(5)
         temp_lrx.SetMarkerStyle(24)
-        
-        # Now fill the histos
-        #for k in range(0,len(newtime)-1):
-        #    temp_tx.Fill(newtime,newtx)
-        #    temp_rx.Fill(newtime,newrx)
-        #    temp_ltx.Fill(newtime,newltx)
-        #    temp_lrx.Fill(newtime,newlrx)
-            
+           
         self.graph1.append(temp_tx)
         self.graph1.append(temp_rx)
         self.graph1.append(temp_ltx)
         self.graph1.append(temp_lrx)
        
-       # create multigraph
-        self.multigraph = RO.TMultiGraph()
-        self.multigraph.Add(temp_tx)
-        self.multigraph.Add(temp_rx)
-        self.multigraph.Add(temp_ltx)
-        self.multigraph.Add(temp_lrx)
+       # create multigraph and add to list
+        multigraph = RO.TMultiGraph()
+        multigraph.Add(temp_tx)
+        multigraph.Add(temp_rx)
+        multigraph.Add(temp_ltx)
+        multigraph.Add(temp_lrx)
+        self.multig.append(multigraph)
         #create Legend
         x1 = .1
         y1 = .7 
         x2 = .48
         y2 = .9
-        self.mgL = RO.TLegend(x1,y1,x2,y2)
-        self.mgL.SetHeader('tx and rx on lan and wlan  '+devicename)
-        self.mgL.AddEntry(temp_tx,"wlan tx","P")
-        self.mgL.AddEntry(temp_rx,"wlan rx","P")
-        self.mgL.AddEntry(temp_ltx,"lan tx","P")
-        self.mgL.AddEntry(temp_lrx,"lan rx","P")
+        mgL = RO.TLegend(x1,y1,x2,y2)
+        mgL.SetHeader('tx and rx on lan and wlan  '+devicename)
+        mgL.AddEntry(temp_tx,"wlan tx","P")
+        mgL.AddEntry(temp_rx,"wlan rx","P")
+        mgL.AddEntry(temp_ltx,"lan tx","P")
+        mgL.AddEntry(temp_lrx,"lan rx","P")
+        self.multigL.append(mgL)
+       
+       
        
        
        
@@ -382,9 +407,10 @@ class MyReadTree(object):
         bfo = " \033[0m "
         
         
-        message =[500]
+        message =['' for i in range(500)]
         message[0] = 'Problem with rootfile'
         message[1] = 'Problem with Cutfile'
+        message[100] = ' not enough data  in plot '
         
         errstr = 'LCWA_c error number > '
         
@@ -417,15 +443,26 @@ if __name__ == '__main__':
     #MyT.CreateHisto22('lanTxBytes','lanRxBytes',name = 'histo100',title = "lanTxBytes vs lanRXBytes",nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12)
 
     MyT.ReadCutList("LCWA/data/cutlist.txt")
-    MyT.ScanRXTX("madre-de-dios")
-    
+    MyT.GetDeviceList()
+    #MyT.ScanRXTX("madre-de-dios")
+    MyT.LoopScanRXTX()
     #MyT.ScanVar("dtCreate", colsize=40)
     #MyT.GetTimeStamp("2016-12-14 22:58:47")
     #MyT.GetNameFromIP("172.16.8.8")
     #MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
-    MyT.DrawHisto()
+    MyT.DrawGraph()
     #MyT.CloseApp()
     #MyT.DrawVariable("lanTxBytes","mydevice")
     #MyT.DrawVariable2("lanTxBytes:lanRxBytes","mydevice")
     #MyT.FillTree()
-    appi.Run()            
+    appi.Run()    
+    
+    
+    
+    ##
+   # >>> item_list = [1, 7, 7, 7, 11, 14 ,100, 100, 4, 4, 4]
+#>>> seen = set()
+#>>> item_list[:] = [item for item in item_list
+                                       #if item not in seen and not seen.add(item)]
+#>>> item_list
+#[1, 7, 11, 14, 100, 4]        

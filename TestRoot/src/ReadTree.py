@@ -178,7 +178,13 @@ class MyReadTree(object):
  
         self.c2.Print(self.root_print+"]")
         
-        
+        self.c3=TCanvas('c3','LCWA3 Canvas', 950, 10, 700, 500 ) 
+
+        self.c3.Draw()
+        self.c3.cd()
+        self.TG2D.Draw()
+        self.c3.Modified()
+        self.c3.Update()
         #for k in self.histo100:
         #    self.c2.cd()
         #    self.c2.Draw()
@@ -284,6 +290,9 @@ class MyReadTree(object):
     def LoopScanRXTX(self):
         """ this routine loops over 
         all the devices and makes graphs """
+        #first get the list of devices
+        
+        self.GetDeviceList()
         
         for k in self.item_list:
             print("Creating plot for ",k)
@@ -405,16 +414,24 @@ class MyReadTree(object):
         nchan = 100
         
         
-        
+        tfmt = self.tfmt
+       
         
         temp_tx=RO.TGraph(len(newtime),newtime,newtx)
         temp_rx=RO.TGraph(len(newtime),newtime,newrx)
         temp_ltx=RO.TGraph(len(newtime),newtime,newltx)
         temp_lrx=RO.TGraph(len(newtime),newtime,newlrx)
         
+        self.TG2D = RO.TGraph2D(len(newtime),newtx,newrx,newtime)
+        self.TG2D.GetZaxis().SetTimeDisplay(1);
+        self.TG2D.GetZaxis().SetTimeFormat(tfmt);  
+        self.TG2D.GetXaxis().SetTitle("TX")      
+        self.TG2D.GetYaxis().SetTitle("RX")  
+        self.TG2D.SetMarkerStyle(21)
+        self.TG2D.SetMarkerColor(2)   
+        
         # make a multigraph
         
-        tfmt = self.tfmt
         # work on the graphs
         temp_tx.SetTitle(devicename+'_wlantx')
         temp_tx.SetMarkerColor(2)
@@ -531,7 +548,7 @@ if __name__ == '__main__':
     #MyT.CreateHisto22('lanTxBytes','lanRxBytes',name = 'histo100',title = "lanTxBytes vs lanRXBytes",nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12)
 
     MyT.ReadCutList("LCWA/data/cutlist.txt")
-    MyT.GetDeviceList()
+    #MyT.GetDeviceList()
     MyT.GetSpeedBoxFile('/Users/klein/scratch/LC04_2020-12-14speedfile.csv' )
     MyT.ScanRXTX("madre-de-dios")
     #MyT.LoopScanRXTX()

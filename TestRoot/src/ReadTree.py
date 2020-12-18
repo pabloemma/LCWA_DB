@@ -18,6 +18,10 @@ from os.path import expanduser
 import time
 import datetime
 import sys
+#add to python path
+sys.path.insert(1,'/Users/klein/git/LCWA/src')
+import MakePlots as MP
+
 import json # needed for reading in cutfiles. They are written as a dictionary
 
 class MyReadTree(object):
@@ -50,7 +54,11 @@ class MyReadTree(object):
         self.graph200 = [] #list of two dimensional grapsh
         self.multig = [] #"multigraph list"
         self.multigL = []# "legend for multigraph"
-            
+        
+        
+        self.compare = False # if you call getspeedboxfile this will be set to true
+        self.tfmt = "%m/%d %H:%M %F 1970-01-01 00:00:00" #format for time display
+    
     def CloseApp(self):
         
         self.application.Terminate()
@@ -119,7 +127,22 @@ class MyReadTree(object):
         """ draws the one and two dimensional histos"""
         #self.c1.Draw()
 
+        if self.compare:
+            self.c1.cd()
+            self.root_print = "/Users/klein/scratch/compares.pdf"
+            self.c1.Print(self.root_print+"[")
 
+            self.c1.Draw()
+            self.multig[0].Draw("AP")
+            self.multigL[0].Draw()
+            #self.speedup.Draw()
+            self.c1.Modified()
+            self.c1.Update()
+            self.c1.Draw()
+            self.c1.Print(self.root_print)
+            self.c1.Print(self.root_print+"]")
+            self.c1.Draw()
+            #return
     
         #count = 0
         #self.c1.Divide(2,2,0,0)
@@ -148,8 +171,12 @@ class MyReadTree(object):
             self.c2.Print(self.root_print)
             
             self.c2.Clear()
+        self.multispeed.Draw("AP")
+        self.c2.Modified()
+        self.c2.Update()
+        self.c2.Print(self.root_print)
+ 
         self.c2.Print(self.root_print+"]")
-    
         
         
         #for k in self.histo100:
@@ -184,15 +211,50 @@ class MyReadTree(object):
             self.mychain.GetEntry(k) 
             self.item_list.append(self.mychain.deviceName) if self.mychain.deviceName not in self.item_list else None    
 
-        
     
-    def GetTimeStamp(self,mytime):
-        """calculates the unix time stamp"""
-        temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
+    def GetSpeedBoxFile(self,filename):
+        """ this routine reads a csv file from the speedbox
+        and will the be used for graphing in the tx/rx graph
+        """
+        #instatiate the PlotAll
+        
+        #conversion constant Megabits to Bytes
+        convert= 1.250e5
+        GMT = 7*3600.
+        
+        tfmt = self.tfmt
+        
+        self.compare = True
+        self.SF = MP.MakePlots(filename)
+        self.SFdata = self.SF.ReadCSVFile() #self.SFdata is a list of three numpy array [0: time, 1: down, 2: up]
+        #print(self.SFdata)
+        print(filename, "  sucessfully imported")
+        #Create the TGraph for speedbox
+        # get length of arrays first
+        array_length = len(self.SFdata[0])
+        self.speeddown = RO.TGraph(array_length,self.SFdata[0]-GMT,self.SFdata[1]*convert)
+        self.speeddown.SetMarkerColor(8)
+        self.speeddown.SetMarkerStyle(26)
+        self.speeddown.GetXaxis().SetTimeDisplay(1);
+        self.speeddown.GetXaxis().SetTimeFormat(tfmt);        
+
+        self.speedup = RO.TGraph(array_length,self.SFdata[0]-GMT,self.SFdata[2]*convert)
+        self.speedup.SetMarkerColor(9)
+        self.speedup.SetMarkerStyle(27)
+        self.speedup.GetXaxis().SetTimeDisplay(1);
+        self.speedup.GetXaxis().SetTimeFormat(tfmt);        
+
+        self.multispeed = RO.TMultiGraph()
+        self.multispeed.Add(self.speeddown)
+        self.multispeed.Add(self.speedup)
+        self.multispeed.GetXaxis().SetTimeDisplay(1)
+        self.multispeed.GetXaxis().SetTimeFormat(tfmt)
+        self.multispeed.GetXaxis().SetNdivisions(508)
+
+    
         
             
         
-        return temp
 
     def GetNameFromIP(self,IPaddress):
         """returns the Name for a given IP 
@@ -213,6 +275,11 @@ class MyReadTree(object):
             if(self.mychain.deviceName==Name):
                 print(" device IP  ",self.mychain.deviceIp)
                 break
+        
+    def GetTimeStamp(self,mytime):
+        """calculates the unix time stamp"""
+        temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
+        return temp
         
     def LoopScanRXTX(self):
         """ this routine loops over 
@@ -307,7 +374,6 @@ class MyReadTree(object):
             self.mychain.GetEntry(k) 
             if(self.mychain.deviceName==devicename):
                 time.append(self.GetTimeStamp(self.mychain.dtCreate))
-
                 tx.append(self.mychain.wlanTxBytes)
                 rx.append(self.mychain.wlanRxBytes)
                 ltx.append(self.mychain.lanTxBytes)
@@ -319,17 +385,18 @@ class MyReadTree(object):
             #print(devicename, len(time))
             self.ErrorHandle(100, devicename)
             return   
-        for k in range(0,len(time)-1,2):    
+        for k in range(0,len(time)-1):    
             
             deltaT.append(time[k+1] - time[k])
             if(deltaT[count] != 0.):
                 newtime.append(deltaT[count]/2.+time[k]) # new time in the middle of the time window
                 newtx.append((tx[k+1]-tx[k])/deltaT[count]) # normalize to second
+                print((tx[k+1]-tx[k])/deltaT[count],(rx[k+1]-rx[k])/deltaT[count],(deltaT[count]/2.+time[k]) )
                 newrx.append((rx[k+1]-rx[k])/deltaT[count]) 
                 newltx.append((ltx[k+1]-ltx[k])/deltaT[count]) # normalize to second
                 newlrx.append((lrx[k+1]-lrx[k])/deltaT[count]) 
                 #print(newtime[count],newtx[count],newrx[count],newltx[count],newlrx[count])
-                count+=1
+            count+=1
              
        # setup first one dim histo:
         #get low x and high x
@@ -339,7 +406,7 @@ class MyReadTree(object):
         
         
         
- 
+        
         temp_tx=RO.TGraph(len(newtime),newtime,newtx)
         temp_rx=RO.TGraph(len(newtime),newtime,newrx)
         temp_ltx=RO.TGraph(len(newtime),newtime,newltx)
@@ -347,22 +414,31 @@ class MyReadTree(object):
         
         # make a multigraph
         
+        tfmt = self.tfmt
         # work on the graphs
         temp_tx.SetTitle(devicename+'_wlantx')
         temp_tx.SetMarkerColor(2)
         temp_tx.SetMarkerStyle(21)
-        
+        temp_tx.GetXaxis().SetTimeDisplay(1);
+        temp_tx.GetXaxis().SetTimeFormat(tfmt);        
+
         temp_rx.SetTitle(devicename+'_wlanrx')
         temp_rx.SetMarkerColor(3)
         temp_rx.SetMarkerStyle(22)
+        temp_rx.GetXaxis().SetTimeDisplay(1);
+        temp_rx.GetXaxis().SetTimeFormat(tfmt);        
 
         temp_ltx.SetTitle(devicename+'_lantx')
         temp_ltx.SetMarkerColor(4)
         temp_ltx.SetMarkerStyle(23)
+        temp_ltx.GetXaxis().SetTimeDisplay(1);
+        temp_ltx.GetXaxis().SetTimeFormat(tfmt);        
  
         temp_lrx.SetTitle(devicename+'_lanlrx')
         temp_lrx.SetMarkerColor(5)
         temp_lrx.SetMarkerStyle(24)
+        temp_lrx.GetXaxis().SetTimeDisplay(1);
+        temp_lrx.GetXaxis().SetTimeFormat(tfmt);        
            
         self.graph1.append(temp_tx)
         self.graph1.append(temp_rx)
@@ -375,7 +451,15 @@ class MyReadTree(object):
         multigraph.Add(temp_rx)
         multigraph.Add(temp_ltx)
         multigraph.Add(temp_lrx)
+        if(self.compare):
+            multigraph.Add(self.multispeed)
+        multigraph.GetXaxis().SetTimeDisplay(1);
+        multigraph.GetXaxis().SetTimeFormat(tfmt); 
+        multigraph.GetXaxis().SetNdivisions(504,False) 
+      
+        
         self.multig.append(multigraph)
+
         #create Legend
         x1 = .1
         y1 = .7 
@@ -387,6 +471,10 @@ class MyReadTree(object):
         mgL.AddEntry(temp_rx,"wlan rx","P")
         mgL.AddEntry(temp_ltx,"lan tx","P")
         mgL.AddEntry(temp_lrx,"lan rx","P")
+        if(self.compare):
+            mgL.AddEntry(self.speedup,"speedbox upload","P")
+            mgL.AddEntry(self.speeddown,"speedbox download","P")
+            
         self.multigL.append(mgL)
        
        
@@ -444,8 +532,9 @@ if __name__ == '__main__':
 
     MyT.ReadCutList("LCWA/data/cutlist.txt")
     MyT.GetDeviceList()
-    #MyT.ScanRXTX("madre-de-dios")
-    MyT.LoopScanRXTX()
+    MyT.GetSpeedBoxFile('/Users/klein/scratch/LC04_2020-12-14speedfile.csv' )
+    MyT.ScanRXTX("madre-de-dios")
+    #MyT.LoopScanRXTX()
     #MyT.ScanVar("dtCreate", colsize=40)
     #MyT.GetTimeStamp("2016-12-14 22:58:47")
     #MyT.GetNameFromIP("172.16.8.8")

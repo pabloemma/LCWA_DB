@@ -550,7 +550,7 @@ if __name__ == '__main__':
     MyT.ReadCutList("LCWA/data/cutlist.txt")
     #MyT.GetDeviceList()
     MyT.GetSpeedBoxFile('/Users/klein/scratch/LC04_2020-12-14speedfile.csv' )
-    MyT.ScanRXTX("madre-de-dios")
+    MyT.ScanRXTX("RidgeRoad5")
     #MyT.LoopScanRXTX()
     #MyT.ScanVar("dtCreate", colsize=40)
     #MyT.GetTimeStamp("2016-12-14 22:58:47")

@@ -192,6 +192,16 @@ class MyReadTree(object):
         #    self.c2.Modified()
         #    self.c2.Update()
             #a = input("press any character to continue")
+        
+        if(self.gr2 !=None):
+            self.c4=TCanvas('c3','LCWA3 Canvas', 950, 500, 700, 500 ) 
+
+            self.c4.Draw()
+            self.c4.cd()
+            self.gr2.Draw("AP")
+            self.c4.Modified()
+            self.c4.Update()
+           
             
 
     def GetBranchList(self):
@@ -239,13 +249,13 @@ class MyReadTree(object):
         # get length of arrays first
         array_length = len(self.SFdata[0])
         self.speeddown = RO.TGraph(array_length,self.SFdata[0]-GMT,self.SFdata[1]*convert)
-        self.speeddown.SetMarkerColor(8)
+        self.speeddown.SetMarkerColor(9)
         self.speeddown.SetMarkerStyle(26)
         self.speeddown.GetXaxis().SetTimeDisplay(1);
         self.speeddown.GetXaxis().SetTimeFormat(tfmt);        
 
         self.speedup = RO.TGraph(array_length,self.SFdata[0]-GMT,self.SFdata[2]*convert)
-        self.speedup.SetMarkerColor(9)
+        self.speedup.SetMarkerColor(8)
         self.speedup.SetMarkerStyle(27)
         self.speedup.GetXaxis().SetTimeDisplay(1);
         self.speedup.GetXaxis().SetTimeFormat(tfmt);        
@@ -297,6 +307,55 @@ class MyReadTree(object):
         for k in self.item_list:
             print("Creating plot for ",k)
             self.ScanRXTX(k)
+    
+    def Make2DGraph(self,devicename,variable1,variable2):
+        """this returns a 2d graph of the 2 variables"""
+        
+        # read in the values 
+        time = array('f')
+        x = array('f')
+        y = array('f')
+       
+        deltaT = array('f')
+        newtime = array('f')
+        newx = array('f')
+        newy = array('f')
+       
+        for k in range(0,self.myentries):
+            self.mychain.GetEntry(k) 
+            if(self.mychain.deviceName==devicename):
+                time.append(self.GetTimeStamp(self.mychain.dtCreate))
+                exec('x.append(self.mychain.%s)' % variable1)
+                exec('y.append(self.mychain.%s)' % variable2)
+   
+                   #exec('h1.Fill(entry.%s)' % variable)
+ 
+        #now normalize on seconds
+       
+        count=0 
+        #check for only one entry:
+        if(len(time)<2):
+            #print(devicename, len(time))
+            self.ErrorHandle(100, devicename)
+            return   
+        for k in range(0,len(time)-1):    
+            
+            deltaT.append(time[k+1] - time[k])
+            if(deltaT[count] != 0.):
+                newtime.append(deltaT[count]/2.+time[k]) # new time in the middle of the time window
+                newx.append((x[k+1]-x[k])/deltaT[count]) # normalize to second
+                newy.append((y[k+1]-y[k])/deltaT[count]) 
+            count+=1
+
+        
+        
+        #self.gr2 = RO.TGraph2D(len(newtime),newx,newy,newtime)
+        self.gr2 = RO.TGraph(len(newtime),newx,newy)
+        self.gr2.SetMarkerColor(3)
+        self.gr2.SetMarkerStyle(24)
+        #self.gr2.GetXaxis().SetTimeDisplay(1);
+        #self.gr2.GetXaxis().SetTimeFormat(self.tfmt);        
+       
         
     def MakeCanvas(self):
         
@@ -422,7 +481,7 @@ class MyReadTree(object):
         temp_ltx=RO.TGraph(len(newtime),newtime,newltx)
         temp_lrx=RO.TGraph(len(newtime),newtime,newlrx)
         
-        self.TG2D = RO.TGraph2D(len(newtime),newtx,newrx,newtime)
+        self.TG2D = RO.TGraph2D(len(newtime),newltx,newrx,newtime)
         self.TG2D.GetZaxis().SetTimeDisplay(1);
         self.TG2D.GetZaxis().SetTimeFormat(tfmt);  
         self.TG2D.GetXaxis().SetTitle("TX")      
@@ -556,6 +615,7 @@ if __name__ == '__main__':
     #MyT.GetTimeStamp("2016-12-14 22:58:47")
     #MyT.GetNameFromIP("172.16.8.8")
     #MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
+    MyT.Make2DGraph("madre-de-dios", 'lanTxBytes', 'wlanRxBytes')
     MyT.DrawGraph()
     #MyT.CloseApp()
     #MyT.DrawVariable("lanTxBytes","mydevice")
@@ -565,10 +625,3 @@ if __name__ == '__main__':
     
     
     
-    ##
-   # >>> item_list = [1, 7, 7, 7, 11, 14 ,100, 100, 4, 4, 4]
-#>>> seen = set()
-#>>> item_list[:] = [item for item in item_list
-                                       #if item not in seen and not seen.add(item)]
-#>>> item_list
-#[1, 7, 11, 14, 100, 4]        

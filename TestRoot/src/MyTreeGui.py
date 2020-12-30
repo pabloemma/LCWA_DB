@@ -130,20 +130,20 @@ class MyFrame(wx.Frame):
         menubar.Append(file_menu,"&File \tCTRL+F")
 
         self.CreateMenuItem(file_menu, "Quit",self.OnExit)
-        self.CreateMenuItem(file_menu, "InputFile",self.OnOpenTreeFile)
+        self.CreateMenuItem(file_menu, "Root Input File",self.OnOpenTreeFile)
         self.CreateMenuItem(file_menu, "Output file",self.OnSetOutputFile)
 
         #section for action
-        action_menu = wx.Menu()
-        menubar.Append(action_menu,"&Action \tCTRL+A")
+        #action_menu = wx.Menu()
+        #menubar.Append(action_menu,"&Action \tCTRL+A")
 
-        self.CreateMenuItem(action_menu, "Login",self.OnLogin)
-        self.CreateMenuItem(action_menu, "Logout",self.OnLogout)
+        #self.CreateMenuItem(action_menu, "Login",self.OnLogin)
+        #self.CreateMenuItem(action_menu, "Logout",self.OnLogout)
         
         
-        self.CreateMenuItem(action_menu, "Debug Level",self.OnDebugLevel)
+        #self.CreateMenuItem(action_menu, "Debug Level",self.OnDebugLevel)
         
-        action_menu.InsertSeparator(2)
+        #action_menu.InsertSeparator(2)
         
         #section for services
         service_menu = wx.Menu()
@@ -153,7 +153,14 @@ class MyFrame(wx.Frame):
         self.CreateMenuItem(service_menu, "Get Device List",self.OnGetDeviceList)
         self.CreateMenuItem(service_menu, "Get SpeedBoxFile",self.OnGetSpeedBoxFile)
         self.CreateMenuItem(service_menu, "Get Variables",self.OnGetVariables)
+        self.CreateMenuItem(service_menu, "Set Device",self.OnSetDevice)
+        
+        self.CreateMenuItem(service_menu, "Scan Rx and Tx",self.OnScanRXTX)
 
+        plot_menu = wx.Menu()
+        menubar.Append(plot_menu,"plots")
+
+        self.CreateMenuItem(plot_menu, "Draw variable",self.OnDrawVariable)
 
 
 
@@ -216,6 +223,12 @@ class MyFrame(wx.Frame):
         # Now read the tree from the file
         self.MyT.ReadTree()
         
+        # Get device list:
+        self.GetAllDevices()
+        
+        #Initialize some variables to None
+        self.devicename = None
+        
          
     def OnLogin(self,event):
         """
@@ -228,15 +241,7 @@ class MyFrame(wx.Frame):
         TF.Show()
         return 
     
-    def OnLogout(self,event):
-        print("Logging out of UNMS server")
-        self.UNMS.Logout()
-        
-    def OnGetUser(self,event):
-        """
-        Print out username and email of device
-        """
-        self.user = self.UNMS.GetUser()
+         
         
     def OnGetBranchList(self,event):
         """ Gives a list of the branches in the ROOT tree"""
@@ -285,7 +290,7 @@ class MyFrame(wx.Frame):
         topLbl = wx.StaticText(panel,-1,"Available branches")
         topLbl.SetFont(wx.Font(18,wx.SWISS,wx.NORMAL,wx.BOLD))
             
-        myclb = wx.CheckListBox(panel,-1,(60,60),(300,600),self.MyT.Blist,wx.LB_MULTIPLE)
+        myclb = wx.CheckListBox(panel,-1,(20,100),(300,600),self.MyT.Blist,wx.LB_MULTIPLE)
         panel.Bind(wx.EVT_LISTBOX, self.EvtListBox, myclb)
         panel.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox, myclb)
         myclb.SetSelection(0)
@@ -312,8 +317,8 @@ class MyFrame(wx.Frame):
         btnSizer.Add(cancelBtn)
         btnSizer.Add((20,20),1)
         
-        mainSizer.Add(branchSizer,0,wx.EXPAND|wx.ALL,30)
-        mainSizer.Add(btnSizer,0,wx.EXPAND|wx.BOTTOM,10)
+        mainSizer.Add(branchSizer,0,wx.EXPAND,30)
+        mainSizer.Add(btnSizer,0,wx.EXPAND|wx.BOTTOM,30)
         
         panel.SetSizer(mainSizer)
         myclb.Show(show=True)
@@ -339,6 +344,15 @@ class MyFrame(wx.Frame):
         TA.SetCode('Error')
         TA.Show()
 
+    
+    def OnSetDevice(self,event):
+        """here we choose the device"""
+        self.devicename = ''
+        dialog = wx.TextEntryDialog(None," Give name of the device",value="madre-de-dios",style=wx.OK | wx.CANCEL,pos=(800,500))
+        if dialog.ShowModal() == wx.ID_OK:
+            self.devicename = dialog.GetValue()
+        dialog.Destroy()
+
         
        
     def OnSetOutputFile(self,event):   
@@ -348,16 +362,17 @@ class MyFrame(wx.Frame):
         OF=OutputFileDialog()
         OF.Show()
         
-    def OnSetAirCubeNetwork(self,event):
-      
-      
-        self.aircube_system = self.UNMS.GetAircubeSystem()
-        MIL=MyInputList('this is the UNMS gui')
-        MIL.ReadData(self.aircube_system)
-        MIL.CreateLayout()
-        MIL.Show()
+    def OnScanRXTX(self,event):    
+        """scan rx and tx for device """
+                
+        self.MyT.ScanRXTX(self.selected_device)
         
-
+        
+    def GetAllDevices(self):
+        """gets called at initialization, determines all the available devices"""
+        
+        self.device_list = self.MyT.GetDeviceList()    
+        
     ############Help system
     
     def OnHelpGeneral(self,event): 
@@ -384,21 +399,14 @@ class MyFrame(wx.Frame):
         
         
     
-    def OnDebugLevel(self,event):
-        """
-        Sets the debug level of UNMSControl
-        """
-        choices = ["0","1","2"]
-        dialog = wx.SingleChoiceDialog(None , "select debug level" ,"Set Debug Level",choices)
-        if dialog.ShowModal() == wx.ID_OK:
-            debuglevel = int(dialog.GetStringSelection())
-            self.UNMS.SetDebugLevel(debuglevel)
-        dialog.Destroy()
     
     def OnSaveList(self,event):
         """ this routine gets called from OnGetVariables, when you press save"""
         print("saving")
-        self.FrameListPanel.Destroy()    
+        self.blist = self.myclb.GetCheckedStrings()
+        print(self.blist)
+        self.FrameListPanel.Destroy() 
+   
 
     def OnCancelList(self,event):
         """ this routine gets called from OnGetVariables, when you press save"""
@@ -439,34 +447,7 @@ class MyFrame(wx.Frame):
 
     
 
-    def PrintDict(self,dict):
-        #pprint.pprint(dict, width = 1 ,depth =2,sort_dicts=True)
-        
-        print('\n ***************w New Block ****************** \n')
-            #self.PrintDict(self.allAP[k])
-        print( yaml.dump(dict, default_flow_style=False))
-        test = yaml.dump(dict, default_flow_style=False)
-        try:
-            print (dict['name'])
-        except:
-            pass
-        print('\n ************************************************* \n \n \n')
-        self.gen_dict_extract('id',dict)
 
-
-
-    def gen_dict_extract(self,key, var):
-        if hasattr(var,'iteritems'):
-            for k, v in var.iteritems():
-                if k == key:
-                    yield v
-                if isinstance(v, dict):
-                    for result in self.gen_dict_extract(key, v):
-                        yield result
-                elif isinstance(v, list):
-                    for d in v:
-                        for result in self.gen_dict_extract(key, d):
-                            yield result
 
     def EvtListBox(self, event):
         print('EvtListBox: %s\n' % event.GetString())
@@ -480,10 +461,33 @@ class MyFrame(wx.Frame):
         print('Box %s is %schecked \n' % (label, status))
         self.myclb.SetSelection(index)    # so that (un)checking also selects (moves the highlight)
         
-
+    def OnDrawVariable(self,event):
+        """ Draws variables according to selected list
+        If variables have been selected previously they are listed here 
+        and can be reduced
+         """
+         
+         # determine if there are already selected variables
+        if self.devicename == None:
+            self.OnSetDevice(event)
+        # check that devicename has been selected:
+        
+        try:    
+            print(self.startline, ' selected variables ',self.blist)
+        except:
+            self.OnGetVariables(event)
+            
+        if(len(self.blist)> 1):
+            print(self.startline,' multi var drawings not possible')
+            print(self.startline,' Pick one variable')
+            self.OnGetVariables()
+        
+        
+        self.MyT.DrawVariable(self.blist[0],devicename=self.devicename)
+            
  
 
-class UNMS_GUI(wx.App):
+class LCWA_GUI(wx.App):
 
     def __init__(self,redirect = True,filename=None):
         wx.App.__init__(self,redirect,filename)
@@ -504,6 +508,8 @@ class UNMS_GUI(wx.App):
         self.UF.SetSize((600,300))
         #self.UF.Centre()
         self.UF.SetPosition((90,900))
+        
+        
         
        
 
@@ -528,7 +534,7 @@ class UNMS_GUI(wx.App):
 
 if __name__ == '__main__':
     
-    MA = UNMS_GUI(redirect=False)
+    MA = LCWA_GUI(redirect=False)
     MA.MainLoop()
 
 

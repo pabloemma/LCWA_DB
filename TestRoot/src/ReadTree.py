@@ -41,7 +41,7 @@ class MyReadTree(object):
             self.ErrorHandle(0,info=rootfile)
          
         # Create default Canvas
-        self.MakeCanvas() 
+        #self.MakeCanvas() 
         
         
         # get home directory
@@ -93,32 +93,50 @@ class MyReadTree(object):
  
     
         
-    def DrawVariable(self,variable,cut_expression = None):
+    def DrawVariable(self,variable,cut_expression = None , devicename = None):
         #1 dimensional drawing
         self.c3=TCanvas('c3','LCWA3 Canvas', 950, 10, 700, 500 ) 
 
         self.c3.cd()
         
         if(cut_expression != None):
-            self.mychain.Draw(variable,self.MakeCut(self.cutlist[cut_expression]))
+            cutt = self.cutlist[cut_expression]
+            if(devicename != None):
+                cutt = cutt+" && deviceName == \""+ devicename + "\""
+                print(cutt)
+            self.mychain.Draw(variable,self.MakeCut(cutt))
         else:
-            self.mychain.Draw(variable)
+            if(devicename != None):
+                cutt = "deviceName == \"" + devicename + "\""
+                print(cutt)
+                self.mychain.Draw(variable,self.MakeCut(cutt))
+            else:
+                self.mychain.Draw(variable)
          
         self.c3.Modified()
         self.c3.Update()
         
       
 
-    def DrawVariable2(self,variable1,cut_expression = None):
+    def DrawVariable2(self,variable1,cut_expression = None, devicename = None):
         #1 dimensional drawing
         self.c4=TCanvas('c4','LCWA4 Canvas', 950, 600, 700, 500 ) 
 
         self.c4.cd()
         
         if(cut_expression != None):
-            self.mychain.Draw(variable1,self.MakeCut(self.cutlist[cut_expression]))
+            cutt = self.cutlist[cut_expression]
+            if(devicename != None):
+                cutt = cutt+" && deviceName == \""+ devicename + "\""
+                print(cutt)
+            self.mychain.Draw(variable1,self.MakeCut(cutt))
         else:
-            self.mychain.Draw(variable1)
+            if(devicename != None):
+                cutt = "deviceName == \"" + devicename + "\""
+                print(cutt)
+                self.mychain.Draw(variable1,self.MakeCut(cutt))
+            else:
+                self.mychain.Draw(variable1)
          
         self.c4.Modified()
         self.c4.Update()
@@ -127,6 +145,8 @@ class MyReadTree(object):
         """ draws the one and two dimensional histos"""
         #self.c1.Draw()
 
+        self.MakeCanvas()
+        
         if self.compare:
             self.c1.cd()
             self.root_print = "/Users/klein/scratch/compares.pdf"
@@ -226,7 +246,7 @@ class MyReadTree(object):
         for k in range(0,self.myentries):
             self.mychain.GetEntry(k) 
             self.item_list.append(self.mychain.deviceName) if self.mychain.deviceName not in self.item_list else None    
-
+        return self.item_list
     
     def GetSpeedBoxFile(self,filename):
         """ this routine reads a csv file from the speedbox
@@ -601,22 +621,27 @@ if __name__ == '__main__':
     MyT.ReadTree()
     MyT.GetBranchList()
     MyT.MakeTimeCut(time_low="2020-06-21 00:32:51", time_high="2020-12-21 00:32:51")
-    #MyT.DrawVariable("lanRxBytes")
 
     #MyT.CreateHisto11('lanTxBytes',name = 'histo1',title = "lanTxBytes",nchan=50,lowx=0.,highx=1.e12)
     #MyT.CreateHisto22('lanTxBytes','lanRxBytes',name = 'histo100',title = "lanTxBytes vs lanRXBytes",nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12)
 
     MyT.ReadCutList("LCWA/data/cutlist.txt")
+    #MyT.DrawVariable("lanRxBytes",devicename = 'madre-de-dios')
+    MyT.DrawVariable("lanRxBytes",cut_expression='test1',devicename = 'madre-de-dios')
+
     #MyT.GetDeviceList()
-    MyT.GetSpeedBoxFile('/Users/klein/scratch/LC04_2020-12-14speedfile.csv' )
-    MyT.ScanRXTX("RidgeRoad5")
+
+    #MyT.GetSpeedBoxFile('/Users/klein/scratch/LC04_2020-12-14speedfile.csv' )
+    #MyT.ScanRXTX("RidgeRoad5")
+
+    
     #MyT.LoopScanRXTX()
     #MyT.ScanVar("dtCreate", colsize=40)
     #MyT.GetTimeStamp("2016-12-14 22:58:47")
     #MyT.GetNameFromIP("172.16.8.8")
     #MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
-    MyT.Make2DGraph("madre-de-dios", 'lanTxBytes', 'wlanRxBytes')
-    MyT.DrawGraph()
+    #MyT.Make2DGraph("madre-de-dios", 'lanTxBytes', 'wlanRxBytes')
+    #MyT.DrawGraph()
     #MyT.CloseApp()
     #MyT.DrawVariable("lanTxBytes","mydevice")
     #MyT.DrawVariable2("lanTxBytes:lanRxBytes","mydevice")

@@ -55,6 +55,11 @@ class MyReadTree(object):
         self.multig = [] #"multigraph list"
         self.multigL = []# "legend for multigraph"
         
+        self.multiglrx = [] # list of multigrahs for the lan rx
+        self.multigltx = []
+        self.multigwrx = []
+        self.multigwtx = []
+        
         
         self.compare = False # if you call getspeedboxfile this will be set to true
         self.tfmt = "%m/%d %H:%M %F 1970-01-01 00:00:00" #format for time display
@@ -155,7 +160,7 @@ class MyReadTree(object):
             self.c1.Draw()
             self.multig[0].Draw("AP")
             self.multigL[0].Draw()
-            #self.speedup.Draw()
+            self.speedup.Draw()
             self.c1.Modified()
             self.c1.Update()
             self.c1.Draw()
@@ -184,14 +189,14 @@ class MyReadTree(object):
         for k in range(0,len(self.multig)):
             self.c2.cd()
             self.multig[k].Draw("AP")
-            self.multigL[k].Draw()
+            self.multigL[k].Draw("")
             self.c2.Modified()
             self.c2.Update()
             self.c2.Draw()
             self.c2.Print(self.root_print)
             
             self.c2.Clear()
-        self.multispeed.Draw("AP")
+        #self.multispeed.Draw("AP")
         self.c2.Modified()
         self.c2.Update()
         self.c2.Print(self.root_print)
@@ -202,7 +207,7 @@ class MyReadTree(object):
 
         self.c3.Draw()
         self.c3.cd()
-        self.TG2D.Draw()
+        #self.TG2D.Draw()
         self.c3.Modified()
         self.c3.Update()
         #for k in self.histo100:
@@ -222,7 +227,79 @@ class MyReadTree(object):
             self.c4.Modified()
             self.c4.Update()
            
+    def DrawGraph1(self): 
+        
+        
+                #constant for axis division
+        ndiv = 204
+        
+        #offset for label
+        off =.02
+        
+        "splitline directive"
+        spl = "#splitline{%m/%d}{%H:%M}"
+
+        xmin = 0.
+        
+        self.c10 = RO.TCanvas("c10"," lots of devices",20,20,900,1000)
+               
+        self.root_print = "/Users/klein/scratch/multiplots.pdf"
+        self.c10.Print(self.root_print+"[")
+        self.c10.Divide(2,2)
+        self.c10.Draw()
+        self.c10.cd(1)
+        self.multigraph_wtx.SetMinimum(xmin)
+        self.multigraph_wtx.GetXaxis().SetTimeDisplay(1);
+        self.multigraph_wtx.GetXaxis().SetNdivisions(ndiv)
+        self.multigraph_wtx.GetXaxis().SetTimeFormat(self.tfmt); 
+        self.multigraph_wtx.GetXaxis().SetLabelOffset(off); 
+        self.multigraph_wtx.GetXaxis().SetTimeFormat(spl);    
+           
+        self.multigraph_wtx.Draw("AP")
+        self.mgL_tx.Draw("")
+        
+        self.c10.cd(2)
+        self.multigraph_wrx.GetXaxis().SetTimeDisplay(1);
+        self.multigraph_wrx.GetXaxis().SetNdivisions(ndiv)
+        self.multigraph_wrx.GetXaxis().SetTimeFormat(self.tfmt);        
+        self.multigraph_wrx.SetMinimum(xmin)        
+        self.multigraph_wrx.GetXaxis().SetLabelOffset(off); 
+        self.multigraph_wrx.GetXaxis().SetTimeFormat(spl);    
+        self.multigraph_wrx.Draw("AP")
+        self.mgL_rx.Draw("")
+        
+        self.c10.cd(3)
+        self.multigraph_lrx.GetXaxis().SetTimeDisplay(1);
+        self.multigraph_lrx.GetXaxis().SetNdivisions(ndiv)
+        self.multigraph_lrx.GetXaxis().SetTimeFormat(self.tfmt);        
+        self.multigraph_lrx.SetMinimum(xmin)        
+        self.multigraph_lrx.GetXaxis().SetLabelOffset(off); 
+        self.multigraph_lrx.GetXaxis().SetTimeFormat(spl);    
+        self.multigraph_lrx.Draw("AP")
+        self.mgL_ltx.Draw("")
+        
+        self.c10.cd(4)
+        self.multigraph_ltx.GetXaxis().SetTimeDisplay(1);
+        self.multigraph_ltx.GetXaxis().SetNdivisions(ndiv)
+        self.multigraph_ltx.GetXaxis().SetTimeFormat(self.tfmt);        
+        self.multigraph_ltx.SetMinimum(xmin)        
+        self.multigraph_ltx.GetXaxis().SetLabelOffset(off); 
+        self.multigraph_ltx.GetXaxis().SetTimeFormat(spl);    
+        self.multigraph_ltx.Draw("AP")
+        self.mgL_lrx.Draw("")
+        
+        
+        
+             
             
+            
+        #self.multispeed.Draw("AP")
+        self.c10.Modified()
+        self.c10.Update()
+        self.c10.Draw()
+        self.c10.Print(self.root_print)
+ 
+        self.c10.Print(self.root_print+"]")
 
     def GetBranchList(self):
         """ Get list of branches"""
@@ -314,19 +391,58 @@ class MyReadTree(object):
         
     def GetTimeStamp(self,mytime):
         """calculates the unix time stamp"""
+        #strip quotes
+        mytime=mytime.strip('"')
         temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
         return temp
         
-    def LoopScanRXTX(self):
+    def LoopScanRXTX(self,devicelist = None):
         """ this routine loops over 
         all the devices and makes graphs """
         #first get the list of devices
+        if(devicelist == None):
+            self.GetDeviceList()
+        else:
+            self.item_list = devicelist
+            
+            
+        print(self.item_list)
+        self.multig_lrx=[]
+        self.multig_ltx=[]
+        self.multig_wrx=[]
+        self.multig_wtx=[]
         
-        self.GetDeviceList()
+        self.multigraph_lrx = RO.TMultiGraph()
+        self.multigraph_ltx = RO.TMultiGraph()
+        self.multigraph_wrx = RO.TMultiGraph()
+        self.multigraph_wtx = RO.TMultiGraph()
+        
+        #determine size according to the number of entries we have.
+        number = float(len(self.item_list))
+        temp = .05*number
+        y2 = .9
+        y1 = y2-temp
+        if(y1 < .3):
+            y1=.5
+        
+        x1 = .1
+        #y1 = .5
+        x2 = .48
+        y2 = .9
+        
+         
+        self.mgL_tx = RO.TLegend(x1,y1,x2,y2)
+        self.mgL_rx = RO.TLegend(x1,y1,x2,y2)
+        self.mgL_ltx = RO.TLegend(x1,y1,x2,y2)
+        self.mgL_lrx = RO.TLegend(x1,y1,x2,y2)
+
+
+        self.dcount = 0  #used for setting plot variables
+        
         
         for k in self.item_list:
             print("Creating plot for ",k)
-            self.ScanRXTX(k)
+            self.ScanRXTX1(k)
     
     def Make2DGraph(self,devicename,variable1,variable2):
         """this returns a 2d graph of the 2 variables"""
@@ -440,6 +556,10 @@ class MyReadTree(object):
             self.mychain.Scan(var,"",width)
         return
     
+         
+        
+        
+    
     def ScanRXTX(self, devicename):
         """print tx and RX for a give device"""
         
@@ -477,12 +597,25 @@ class MyReadTree(object):
             
             deltaT.append(time[k+1] - time[k])
             if(deltaT[count] != 0.):
-                newtime.append(deltaT[count]/2.+time[k]) # new time in the middle of the time window
-                newtx.append((tx[k+1]-tx[k])/deltaT[count]) # normalize to second
-                print((tx[k+1]-tx[k])/deltaT[count],(rx[k+1]-rx[k])/deltaT[count],(deltaT[count]/2.+time[k]) )
-                newrx.append((rx[k+1]-rx[k])/deltaT[count]) 
-                newltx.append((ltx[k+1]-ltx[k])/deltaT[count]) # normalize to second
-                newlrx.append((lrx[k+1]-lrx[k])/deltaT[count]) 
+                newtime.append(deltaT[count]/2.+time[k])
+                a =(tx[k+1]-tx[k])/deltaT[count]
+                b =(rx[k+1]-rx[k])/deltaT[count]
+                c =(ltx[k+1]-ltx[k])/deltaT[count]
+                d =(lrx[k+1]-lrx[k])/deltaT[count]
+                if a < 0.:
+                    a=0
+                if b < 0.:
+                    b=0
+                if c < 0.:
+                    c=0
+                if d < 0.:
+                    d=0
+                    
+                 # new time in the middle of the time window
+                newtx.append(a) # normalize to second
+                newrx.append(b) 
+                newltx.append(c) # normalize to second
+                newlrx.append(d) 
                 #print(newtime[count],newtx[count],newrx[count],newltx[count],newlrx[count])
             count+=1
              
@@ -575,8 +708,137 @@ class MyReadTree(object):
        
        
        
+    def ScanRXTX1(self,devicename):
+              #we loop over all the entries
+        # first we need to create a few arrays
+        # try to have time in MST
+        GMT = 7*3600.
+        
+
+        time = array('f')
+        tx = array('f')
+        rx = array('f')
+        ltx = array('f')
+        lrx = array('f')
        
+        deltaT = array('f')
+        newtime = array('f')
+        newtx = array('f')
+        newrx = array('f')
+        newltx = array('f')
+        newlrx = array('f')
+        
+        for k in range(0,self.myentries):
+            self.mychain.GetEntry(k) 
+            if(self.mychain.deviceName==devicename) and  self.GetTimeStamp(self.mychain.dtCreate)>self.timecut[0] and self.GetTimeStamp(self.mychain.dtCreate)<self.timecut[1]:
+
+                time.append(self.GetTimeStamp(self.mychain.dtCreate))
+                tx.append(self.mychain.wlanTxBytes)
+                rx.append(self.mychain.wlanRxBytes)
+                ltx.append(self.mychain.lanTxBytes)
+                lrx.append(self.mychain.lanRxBytes)
+         
+        count=0 
+        #check for only one entry:
+        if(len(time)<2):
+            #print(devicename, len(time))
+            self.ErrorHandle(100, devicename)
+            return   
+        for k in range(0,len(time)-1):    
+            
+            deltaT.append(time[k+1] - time[k])
+            if(deltaT[count] != 0.):
+                newtime.append((deltaT[count]/2.+time[k]-GMT)) # new time in the middle of the time window
+
+                a =(tx[k+1]-tx[k])/deltaT[count]
+                b =(rx[k+1]-rx[k])/deltaT[count]
+                c =(ltx[k+1]-ltx[k])/deltaT[count]
+                d =(lrx[k+1]-lrx[k])/deltaT[count]
+                if a < 0.:
+                    a=0.
+                if b < 0.:
+                    b=0.
+                if c < 0.:
+                    c=0.
+                if d < 0.:
+                    d=0.
+                    
+                 # new time in the middle of the time window
+                newtx.append(a) # normalize to second
+                newrx.append(b) 
+                newltx.append(c) # normalize to second
+                newlrx.append(d) 
+
+                
+                
+                
+                
+                
+                
+                 #print(newtime[count],newtx[count],newrx[count],newltx[count],newlrx[count])
+            count+=1
+             
+       # setup first one dim histo:
+        #get low x and high x
+        tlow = newtime[0]
+        thigh = newtime[len(newtime)-1]
+        nchan = 100
+        
+        
+        tfmt = self.tfmt
        
+        
+        temp_tx=RO.TGraph(len(newtime),newtime,newtx)
+        temp_rx=RO.TGraph(len(newtime),newtime,newrx)
+        temp_ltx=RO.TGraph(len(newtime),newtime,newltx)
+        temp_lrx=RO.TGraph(len(newtime),newtime,newlrx)
+        
+        
+        temp_tx.SetTitle(devicename+'_wlantx')
+        temp_tx.SetMarkerColor(self.dcount+2)
+        temp_tx.SetMarkerStyle(self.dcount+21)
+        temp_tx.GetXaxis().SetTimeDisplay(1);
+        temp_tx.GetXaxis().SetTimeFormat(self.tfmt);        
+
+        temp_rx.SetTitle(devicename+'_wlanrx')
+        temp_rx.SetMarkerColor(self.dcount+2)
+        temp_rx.SetMarkerStyle(self.dcount+21)
+        temp_rx.GetXaxis().SetTimeDisplay(1);
+        temp_rx.GetXaxis().SetTimeFormat(self.tfmt);        
+
+        temp_ltx.SetTitle(devicename+'_lantx')
+        temp_ltx.SetMarkerColor(self.dcount+2)
+        temp_ltx.SetMarkerStyle(self.dcount+21)
+        temp_ltx.GetXaxis().SetTimeDisplay(1);
+        temp_ltx.GetXaxis().SetTimeFormat(self.tfmt);        
+ 
+        temp_lrx.SetTitle(devicename+'_lanrx')
+        temp_lrx.SetMarkerColor(self.dcount+2)
+        temp_lrx.SetMarkerStyle(self.dcount+21)
+        temp_lrx.GetXaxis().SetTimeDisplay(1);
+        temp_lrx.GetXaxis().SetTimeFormat(self.tfmt);        
+
+
+        self.multigraph_wtx.Add(temp_tx)
+        self.multigraph_wrx.Add(temp_rx)
+        self.multigraph_ltx.Add(temp_ltx)
+        self.multigraph_lrx.Add(temp_lrx)
+#legend dimensions
+        self.mgL_tx.SetHeader('tx wlan')
+        self.mgL_rx.SetHeader('rx wlan')
+        self.mgL_ltx.SetHeader('tx lan')
+        self.mgL_lrx.SetHeader('rx lan')
+        self.mgL_tx.AddEntry(temp_tx,"wlan tx"+devicename,"P")
+        self.mgL_rx.AddEntry(temp_rx,"wlan rx"+devicename,"P")
+        self.mgL_ltx.AddEntry(temp_ltx,"lan tx"+devicename,"P")
+        self.mgL_lrx.AddEntry(temp_lrx,"lan rx"+devicename,"P")
+
+        #temp_rx.Delete()
+        #temp_tx.Delete()
+        #temp_lrx.Delete()
+        #temp_ltx.Delete()
+
+        self.dcount+=1
  #here are the utilities functions
  
         
@@ -620,28 +882,35 @@ if __name__ == '__main__':
  
     MyT.ReadTree()
     MyT.GetBranchList()
-    MyT.MakeTimeCut(time_low="2020-06-21 00:32:51", time_high="2020-12-21 00:32:51")
 
     #MyT.CreateHisto11('lanTxBytes',name = 'histo1',title = "lanTxBytes",nchan=50,lowx=0.,highx=1.e12)
     #MyT.CreateHisto22('lanTxBytes','lanRxBytes',name = 'histo100',title = "lanTxBytes vs lanRXBytes",nchan=50,lowx=0.,highx=1e12,nchan1=50,lowx1=0.,highx1=1e12)
 
     MyT.ReadCutList("LCWA/data/cutlist.txt")
-    #MyT.DrawVariable("lanRxBytes",devicename = 'madre-de-dios')
-    MyT.DrawVariable("lanRxBytes",cut_expression='test1',devicename = 'madre-de-dios')
+    #MyT.DrawVariable("lanRxBytes",devicename = 'AF-Vail')
+    #MyT.DrawVariable("lanRxBytes",cut_expression='test1',devicename = 'madre-de-dios')
 
     #MyT.GetDeviceList()
 
     #MyT.GetSpeedBoxFile('/Users/klein/scratch/LC04_2020-12-14speedfile.csv' )
     #MyT.ScanRXTX("RidgeRoad5")
 
-    
-    #MyT.LoopScanRXTX()
+
+
+    MyT.MakeTimeCut(time_low="2021-01-04 00:32:51", time_high="2021-01-4 18:32:51")
+
+    #devicelist = [ 'madre-de-dios', 'RidgeRoad5', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
+    #devicelist = [ 'camp-stoney', 'camp-stoney-2','wild-turkey-way']    
+
+    devicelist = [  'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
+
+    MyT.LoopScanRXTX(devicelist = devicelist)
     #MyT.ScanVar("dtCreate", colsize=40)
     #MyT.GetTimeStamp("2016-12-14 22:58:47")
     #MyT.GetNameFromIP("172.16.8.8")
     #MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
-    #MyT.Make2DGraph("madre-de-dios", 'lanTxBytes', 'wlanRxBytes')
-    #MyT.DrawGraph()
+    #MyT.Make2DGraph("madre-de-dios", 'wlanTxBytes', 'wlanRxBytes')
+    MyT.DrawGraph1()
     #MyT.CloseApp()
     #MyT.DrawVariable("lanTxBytes","mydevice")
     #MyT.DrawVariable2("lanTxBytes:lanRxBytes","mydevice")

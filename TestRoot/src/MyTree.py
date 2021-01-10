@@ -321,7 +321,6 @@ class MyTree(object):
                 wlanUplinkCapacity[0]= float(a[79]) 
                 
                 self.output_tree.Fill()    
-
             count += 1
         
         self.output_file.Write()

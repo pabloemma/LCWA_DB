@@ -239,7 +239,11 @@ class MyReadTree(object):
         "splitline directive"
         spl = "#splitline{%m/%d}{%H:%M}"
 
-        xmin = 0.
+        xmin = 1.
+        ytitle="rate in [Mb/sec]"
+        offset = 0.
+        tsize=.04
+        
         
         self.c10 = RO.TCanvas("c10"," lots of devices",20,20,900,1000)
                
@@ -254,7 +258,11 @@ class MyReadTree(object):
         self.multigraph_wtx.GetXaxis().SetTimeFormat(self.tfmt); 
         self.multigraph_wtx.GetXaxis().SetLabelOffset(off); 
         self.multigraph_wtx.GetXaxis().SetTimeFormat(spl);    
-           
+        self.multigraph_wtx.GetYaxis().SetTitle(ytitle);        
+        self.multigraph_wtx.GetYaxis().SetTitleOffset(offset);        
+        self.multigraph_wtx.GetYaxis().SetTitleSize(tsize);        
+        self.multigraph_wtx.GetYaxis().CenterTitle(1);        
+  
         self.multigraph_wtx.Draw("AP")
         self.mgL_tx.Draw("")
         
@@ -266,6 +274,10 @@ class MyReadTree(object):
         self.multigraph_wrx.GetXaxis().SetLabelOffset(off); 
         self.multigraph_wrx.GetXaxis().SetTimeFormat(spl);    
         self.multigraph_wrx.Draw("AP")
+        self.multigraph_wrx.GetYaxis().SetTitle(ytitle);        
+        self.multigraph_wrx.GetYaxis().SetTitleOffset(offset);        
+        self.multigraph_wrx.GetYaxis().SetTitleSize(tsize);        
+        self.multigraph_wrx.GetYaxis().CenterTitle(1);        
         self.mgL_rx.Draw("")
         
         self.c10.cd(3)
@@ -276,7 +288,11 @@ class MyReadTree(object):
         self.multigraph_lrx.GetXaxis().SetLabelOffset(off); 
         self.multigraph_lrx.GetXaxis().SetTimeFormat(spl);    
         self.multigraph_lrx.Draw("AP")
-        self.mgL_ltx.Draw("")
+        self.multigraph_lrx.GetYaxis().SetTitle(ytitle);        
+        self.multigraph_lrx.GetYaxis().SetTitleOffset(offset);        
+        self.multigraph_lrx.GetYaxis().SetTitleSize(tsize);        
+        self.multigraph_lrx.GetYaxis().CenterTitle(1);        
+        self.mgL_lrx.Draw("")
         
         self.c10.cd(4)
         self.multigraph_ltx.GetXaxis().SetTimeDisplay(1);
@@ -286,7 +302,11 @@ class MyReadTree(object):
         self.multigraph_ltx.GetXaxis().SetLabelOffset(off); 
         self.multigraph_ltx.GetXaxis().SetTimeFormat(spl);    
         self.multigraph_ltx.Draw("AP")
-        self.mgL_lrx.Draw("")
+        self.multigraph_ltx.GetYaxis().SetTitle(ytitle);        
+        self.multigraph_ltx.GetYaxis().SetTitleOffset(offset);        
+        self.multigraph_ltx.GetYaxis().SetTitleSize(tsize);        
+        self.multigraph_ltx.GetYaxis().CenterTitle(1);        
+        self.mgL_ltx.Draw("")
         
         
         
@@ -323,6 +343,7 @@ class MyReadTree(object):
         for k in range(0,self.myentries):
             self.mychain.GetEntry(k) 
             self.item_list.append(self.mychain.deviceName) if self.mychain.deviceName not in self.item_list else None    
+        print(self.item_list)
         return self.item_list
     
     def GetSpeedBoxFile(self,filename):
@@ -713,8 +734,12 @@ class MyReadTree(object):
         # first we need to create a few arrays
         # try to have time in MST
         GMT = 7*3600.
-        
+        GMT=0.
+        Bytes2Bits = 8.
+        Mbits = 1.e6 # convert things into Megabits
+        convert = Bytes2Bits/Mbits
 
+        ytitle = " Rate in [Mb/sec]"
         time = array('f')
         tx = array('f')
         rx = array('f')
@@ -737,8 +762,10 @@ class MyReadTree(object):
                 rx.append(self.mychain.wlanRxBytes)
                 ltx.append(self.mychain.lanTxBytes)
                 lrx.append(self.mychain.lanRxBytes)
-         
+                
         count=0 
+        #print(tx)
+        #print(lrx)
         #check for only one entry:
         if(len(time)<2):
             #print(devicename, len(time))
@@ -750,10 +777,10 @@ class MyReadTree(object):
             if(deltaT[count] != 0.):
                 newtime.append((deltaT[count]/2.+time[k]-GMT)) # new time in the middle of the time window
 
-                a =(tx[k+1]-tx[k])/deltaT[count]
-                b =(rx[k+1]-rx[k])/deltaT[count]
-                c =(ltx[k+1]-ltx[k])/deltaT[count]
-                d =(lrx[k+1]-lrx[k])/deltaT[count]
+                a =(tx[k+1]-tx[k])/deltaT[count]*convert
+                b =(rx[k+1]-rx[k])/deltaT[count]*convert
+                c =(ltx[k+1]-ltx[k])/deltaT[count]*convert
+                d =(lrx[k+1]-lrx[k])/deltaT[count]*convert
                 if a < 0.:
                     a=0.
                 if b < 0.:
@@ -777,7 +804,6 @@ class MyReadTree(object):
                 
                  #print(newtime[count],newtx[count],newrx[count],newltx[count],newlrx[count])
             count+=1
-             
        # setup first one dim histo:
         #get low x and high x
         tlow = newtime[0]
@@ -839,6 +865,8 @@ class MyReadTree(object):
         #temp_ltx.Delete()
 
         self.dcount+=1
+        if(self.dcount == 8):
+            self.dcount += 1 # for bad symbol in ROOT legend
  #here are the utilities functions
  
         
@@ -897,12 +925,15 @@ if __name__ == '__main__':
 
 
 
-    MyT.MakeTimeCut(time_low="2021-01-04 00:32:51", time_high="2021-01-4 18:32:51")
-
+    MyT.MakeTimeCut(time_low="2021-01-09 06:32:51", time_high="2021-01-09 12:32:51")
+    #master list
+    # devicelist =['AF-Vail', 'madre-de-dios', 'RidgeRoad5', 'RidgeRoadVail', 'VailRidgeRoad', 'rockridge', 'RainbowsEnd5Northwest', 'WaldoMesaRainbowsEnd', 'DonJose5WaldoMesa', 'DonJoseVailAF11', 'RainbowsEndWaldoMesa', 'WaldoMesaDonJose', 'RidgeRoaedVail', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']
     #devicelist = [ 'madre-de-dios', 'RidgeRoad5', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
-    #devicelist = [ 'camp-stoney', 'camp-stoney-2','wild-turkey-way']    
 
-    devicelist = [  'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
+    devicelist = [ 'RidgeRoad5', 'RidgeRoadVail']    
+    #devicelist = [ 'madre-de-dios', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
+
+   
 
     MyT.LoopScanRXTX(devicelist = devicelist)
     #MyT.ScanVar("dtCreate", colsize=40)

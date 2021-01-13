@@ -63,7 +63,20 @@ class MyReadTree(object):
         
         self.compare = False # if you call getspeedboxfile this will be set to true
         self.tfmt = "%m/%d %H:%M %F 1970-01-01 00:00:00" #format for time display
-    
+        
+        
+        #for the integrals
+        self.sum=False # default we don't integrate
+        self.tot_sum_lrx = 0
+        self.tot_sum_ltx= 0
+        self.tot_sum_wrx= 0
+        self.tot_sum_wtx= 0
+ 
+        self.dev_sum_lrx= 0
+        self.dev_sum_ltx= 0
+        self.dev_sum_wrx= 0
+        self.dev_sum_wtx= 0
+   
     def CloseApp(self):
         
         self.application.Terminate()
@@ -320,7 +333,20 @@ class MyReadTree(object):
         self.c10.Print(self.root_print)
  
         self.c10.Print(self.root_print+"]")
-
+        
+        # we have integral
+        if(self.sum):
+            print("*******************  integrals  **************** \n\n")
+            
+            print("total integrals for ", self.total_device)
+            print('lan tx     ','          lan rx    ', '           wlan rx     ', '        wlan tx    ')
+            print(self.tot_sum_ltx,'  ',self.tot_sum_lrx,'  ',self.tot_sum_wrx,'  ',self.tot_sum_wtx)
+            print('lan tx     ','          lan rx    ', '           wlan rx     ', '        wlan tx    ')
+            print(self.dev_sum_ltx,'  ',self.dev_sum_lrx,'  ',self.dev_sum_wrx,'  ',self.dev_sum_wtx)
+            print("\n\n total integrals for ", self.sum_device)
+          
+ 
+ 
     def GetBranchList(self):
         """ Get list of branches"""
         self.Blist = []
@@ -510,6 +536,7 @@ class MyReadTree(object):
         self.gr2 = RO.TGraph(len(newtime),newx,newy)
         self.gr2.SetMarkerColor(3)
         self.gr2.SetMarkerStyle(24)
+        self.gr2.Draw("AP")
         #self.gr2.GetXaxis().SetTimeDisplay(1);
         #self.gr2.GetXaxis().SetTimeFormat(self.tfmt);        
        
@@ -756,7 +783,6 @@ class MyReadTree(object):
         for k in range(0,self.myentries):
             self.mychain.GetEntry(k) 
             if(self.mychain.deviceName==devicename) and  self.GetTimeStamp(self.mychain.dtCreate)>self.timecut[0] and self.GetTimeStamp(self.mychain.dtCreate)<self.timecut[1]:
-
                 time.append(self.GetTimeStamp(self.mychain.dtCreate))
                 tx.append(self.mychain.wlanTxBytes)
                 rx.append(self.mychain.wlanRxBytes)
@@ -792,6 +818,7 @@ class MyReadTree(object):
                     
                  # new time in the middle of the time window
                 newtx.append(a) # normalize to second
+                
                 newrx.append(b) 
                 newltx.append(c) # normalize to second
                 newlrx.append(d) 
@@ -804,6 +831,24 @@ class MyReadTree(object):
                 
                  #print(newtime[count],newtx[count],newrx[count],newltx[count],newlrx[count])
             count+=1
+            
+    
+        # get the sums of the arrays: temporary
+        if(self.sum):
+            if(devicename == self.total_device):  # we are integrating over the main ap
+                self.tot_sum_lrx = self.tot_sum_lrx + sum(newlrx)
+                self.tot_sum_ltx =  self.tot_sum_ltx + sum(newltx)
+                self.tot_sum_wrx = self.tot_sum_wrx + sum(newrx)
+                self.tot_sum_wtx = self.tot_sum_wtx + sum(newtx)
+            if (devicename in self.sum_device):
+                self.dev_sum_lrx = self.dev_sum_lrx + sum(newlrx)
+                self.dev_sum_ltx =  self.dev_sum_ltx + sum(newltx)
+                self.dev_sum_wrx = self.dev_sum_wrx + sum(newrx)
+                self.dev_sum_wtx = self.dev_sum_wtx + sum(newtx)
+                
+                 
+        
+     
        # setup first one dim histo:
         #get low x and high x
         tlow = newtime[0]
@@ -869,7 +914,12 @@ class MyReadTree(object):
             self.dcount += 1 # for bad symbol in ROOT legend
  #here are the utilities functions
  
-        
+    def SetSumVariables(self,device1,device2):  
+        ### this sets the devices which should be summed up and compared
+        self.total_device = device1
+        self.sum_device = device2 # needs to be a list
+        self.sum = True
+          
     def ErrorHandle(self,count,info=None):
         """
         Prints out error message and perfoms action
@@ -925,22 +975,25 @@ if __name__ == '__main__':
 
 
 
-    MyT.MakeTimeCut(time_low="2021-01-09 06:32:51", time_high="2021-01-09 12:32:51")
+    MyT.MakeTimeCut(time_low="2021-01-08 00:00:01", time_high="2021-01-09 00:00:01")
     #master list
-    # devicelist =['AF-Vail', 'madre-de-dios', 'RidgeRoad5', 'RidgeRoadVail', 'VailRidgeRoad', 'rockridge', 'RainbowsEnd5Northwest', 'WaldoMesaRainbowsEnd', 'DonJose5WaldoMesa', 'DonJoseVailAF11', 'RainbowsEndWaldoMesa', 'WaldoMesaDonJose', 'RidgeRoaedVail', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']
-    #devicelist = [ 'madre-de-dios', 'RidgeRoad5', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
+    #devicelist =['AF-Vail', 'madre-de-dios', 'RidgeRoad5', 'RidgeRoadVail', 'VailRidgeRoad', 'rockridge', 'RainbowsEnd5Northwest', 'WaldoMesaRainbowsEnd', 'DonJose5WaldoMesa', 'DonJoseVailAF11', 'RainbowsEndWaldoMesa', 'WaldoMesaDonJose', 'RidgeRoaedVail', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']
+    devicelist = [ 'RidgeRoad5','madre-de-dios', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
 
-    devicelist = [ 'RidgeRoad5', 'RidgeRoadVail']    
+    # this is a second list, whihc is used to create the list of integrable devices.
+    devicelistinteg = [ 'madre-de-dios', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
+
+    #devicelist = [ 'RidgeRoad5', 'RidgeRoadVail']    
     #devicelist = [ 'madre-de-dios', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
 
-   
+    MyT.SetSumVariables('RidgeRoad5', devicelistinteg)
 
     MyT.LoopScanRXTX(devicelist = devicelist)
     #MyT.ScanVar("dtCreate", colsize=40)
     #MyT.GetTimeStamp("2016-12-14 22:58:47")
     #MyT.GetNameFromIP("172.16.8.8")
     #MyT.GetIPFromName("SpiritRidgeJicarrillaRidge")
-    #MyT.Make2DGraph("madre-de-dios", 'wlanTxBytes', 'wlanRxBytes')
+    MyT.Make2DGraph("madre-de-dios", 'wlanTxBytes', 'wlanRxBytes')
     MyT.DrawGraph1()
     #MyT.CloseApp()
     #MyT.DrawVariable("lanTxBytes","mydevice")

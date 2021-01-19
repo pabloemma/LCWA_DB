@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 
 import matplotlib
 
+import sys
+
 
 
 class PandaRead(object):
@@ -27,7 +29,10 @@ class PandaRead(object):
         Constructor
    
          '''
-        self.vers = "0.0.1"  #
+        self.vers = "0.0.2"  #
+        
+        self.prompt = 'Panda> '
+        self.error_code = [None]* 200  # a list of 200 empty messages
         
 
     def ReadFile(self, filename):
@@ -105,7 +110,7 @@ class PandaRead(object):
         s14 = (newtab['cpuUsage'][0:n-1].reset_index(drop=True)  + newtab['cpuUsage'][1:n].reset_index(drop=True))/2.
         s15 = newtab.loc[:,'deviceName']
         #s15 = newtab['deviceName'][0:n-1]
-        print(newtab['deviceName'])
+        #print(newtab['deviceName'])
 
 
         ReduceTableTemp = PDS.concat([s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15],axis = 1)
@@ -116,16 +121,39 @@ class PandaRead(object):
                   'lanTxPacketsRate','lanRxPacketsRate','wlanTxPacketsRate','wlanRxPacketsRate', \
                   'cpuUsage','deviceName']
         tt = ReduceTableTemp.set_axis(collist,axis=1,inplace=False)
-        print(tt.head(5))
+        #print(tt.head(5))
         
 
         return tt
 
                
      
-    
+    def LoopDevices(self, looplist = None):
+        """loops through all the devices litesd in looplist"""
+        if(looplist == None ):
+            self.ErrorCode(101)
+            return
+        else:
+            for k in looplist:
+                print(self.prompt," currently working on ", k)
+                self.ManipTable(k)
         
+        return 1    
     
+    def ErrorCode(self,code):
+        """
+        Handles errors and warnings. error code below 100 are sysexit
+        >100 are warning and returns to flow
+        """
+        self.error_code[101]= " you need to provide a list to Loop over for Loopdevice to work"
+        
+        if(code < 101):
+            print(self.prompt,'Error  code :  ',self.error_code[code])
+            sys.exit(0)
+        elif(code >100 and code <201):
+            print(self.prompt,'Warning  code :  ',self.error_code[code])
+            return
+        
 if __name__ == '__main__':
     
     filename = '/Users/klein/LCWA/data/new/devicedetail.csv'
@@ -141,7 +169,8 @@ if __name__ == '__main__':
               "wlanRxErrRetries","wlanRxPackets","wlanRxRate","wlanTxBytes",\
               "wlanTxErrors","wlanTxPackets","wlanTxRate"]
     
-    
+    looplist =[ 'RidgeRoad5','madre-de-dios', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
+
     
     variable1 = 'deviceName'
     value1='madre-de-dios'
@@ -151,5 +180,6 @@ if __name__ == '__main__':
     
     ReduceFile = '/Users/klein/LCWA/data/new/reduce_devicedetail.csv'
     PR.ReduceTable(ReduceList = ReduceList , ReduceFile = ReduceFile)
-    PR.ManipTable(device='madre-de-dios')
+    #PR.ManipTable(device='madre-de-dios')
+    PR.LoopDevices(looplist = looplist)
     PR.PlotVariable_Time(variable1, value1,variable2,value2)

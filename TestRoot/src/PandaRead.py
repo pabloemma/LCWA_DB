@@ -53,26 +53,38 @@ class PandaRead(object):
         
         #try exec for building the cut:
         
-        exec('self.temp_buf = self.lcwa_data.loc[(self.lcwa_data["%s"]== "%s") \
-        & (self.lcwa_data["%s"] > %f)] ' \
-         % (var1 , val1 , var2 , val2))
+        temp_data = self.ManipTable(val1)
+ 
         
-        self.temp_buf.plot(x='dtCreate',y='lanTxBytes')
+        #exec('self.temp_buf = self.lcwa_data.loc[(self.lcwa_data["%s"]== "%s") \
+        #& (self.lcwa_data["%s"] > %f)] ' \
+        # % (var1 , val1 , var2 , val2))
+
+        exec('self.temp_buf = temp_data.loc[(temp_data["%s"]== "%s") \
+        & (temp_data["%s"] > %f)] ' \
+         % (var1 , val1 , var2 , val2))
+
+        
+        self.temp_buf.plot(x='dtCreate',y='lanTxBytesRate')
+        
         plt.show()
         
-    def ReduceTable(self,ReduceList=None,ReduceFile=None):
-        """
-        this routine reduces  the orginal table to a table consisting only on the columns listed
-        in ReduceList. ReduceFile would be new file with reduced table
-        """ 
-        
-        
-        self.newtab1 = self.lcwa_data.loc[:,ReduceList]
-        if(ReduceFile != None):
-            self.newtab1.to_csv(ReduceFile)
-            
-        #Now we reduce table to just one device_name  
     
+     
+     
+     
+    def LoopDevices(self, looplist = None):
+        """loops through all the devices litesd in looplist"""
+        if(looplist == None ):
+            self.ErrorCode(101)
+            return
+        else:
+            for k in looplist:
+                print(self.prompt," currently working on ", k)
+                self.ManipTable(k)
+        
+        return 1    
+   
     
     def ManipTable(self,device):
         
@@ -126,19 +138,19 @@ class PandaRead(object):
 
         return tt
 
-               
-     
-    def LoopDevices(self, looplist = None):
-        """loops through all the devices litesd in looplist"""
-        if(looplist == None ):
-            self.ErrorCode(101)
-            return
-        else:
-            for k in looplist:
-                print(self.prompt," currently working on ", k)
-                self.ManipTable(k)
+    def ReduceTable(self,ReduceList=None,ReduceFile=None):
+        """
+        this routine reduces  the orginal table to a table consisting only on the columns listed
+        in ReduceList. ReduceFile would be new file with reduced table
+        """ 
         
-        return 1    
+        
+        self.newtab1 = self.lcwa_data.loc[:,ReduceList]
+        if(ReduceFile != None):
+            self.newtab1.to_csv(ReduceFile)
+            
+            
+     
     
     def ErrorCode(self,code):
         """
@@ -174,7 +186,7 @@ if __name__ == '__main__':
     
     variable1 = 'deviceName'
     value1='madre-de-dios'
-    variable2 = 'lanTxBytes'
+    variable2 = 'lanTxBytesRate'
     value2 = 0.
     device = 'madre-de-dios'
     

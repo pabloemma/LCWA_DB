@@ -35,6 +35,7 @@ class PandaRead(object):
         
         self.tests =''
         self.Progress()
+        self.data_buf = {}  # a dictionary of the reduced dataframes. Those are collected and then can be plotted
  
     def Progress(self):
         
@@ -93,21 +94,37 @@ class PandaRead(object):
         
         
     def PT1(self,device , var1, var2):
+        """plot variables with the full test suite
+        """
         
         temp_data = self.ManipTable(device) # needed to get from cumulative to timeslices.
         
+        temp_buf = temp_data.query(self.tests)
+        self.data_buf[device] =temp_buf
+        #print(self.data_buf)
         
-        self.temp_buf = temp_data.query(self.tests)
-        self.temp_buf.plot(x=var1,y=var2)
+        #self.data_buf[device].plot(x=var1,y=var2)
         
-        plt.show()
+        #plt.show()
 
+    def PlotGraph(self, var1, var2):
+        
+        """ currently plots all coolected plots on one plot
+        The data to plot are in self.data_buf, which is a dictionary
+        """
+        for key in self.data_buf:
+            self.data_buf[key].plot(x=var1,y=var2,label = key)
+            plt.show()
+        
+        
     
     def PlotVariable_Time(self , var1, val1 , var2,val2):
         """
         Plot a one dimensional figure of variable against time for give device
         var: name of the value to be plotted
         val: the actual value to be plotted. 
+        this is a fast plot and requires the first variable to be the device name
+        and the second to be a variable consisting of numbers
         
         """
         
@@ -123,13 +140,10 @@ class PandaRead(object):
         
         #using query
         #query_text = '\"var1 == @val1 and var2 > @val2\"'
+
+        
         OP= 'and'
         text = '('+var1+'==@val1) ' +OP+ '('+var2+'>@val2)'
-        print(text)
-        #query_text = '(deviceName == @val1) and (cpuUsage >@val2)'
-        query_text = text
-        print(str(query_text))
-        #self.temp_buf = temp_data.query(query_text)
         self.temp_buf = temp_data.query(text)
         self.temp_buf.plot(x='dtCreate',y=var2)
         
@@ -268,5 +282,6 @@ if __name__ == '__main__':
     #PR.ManipTable(device='madre-de-dios')
     PR.MakeTest(testlist)
     PR.PT1('madre-de-dios','dtCreate','cpuUsage')
+    PR.PlotGraph('dtCreate','cpuUsage')
     PR.LoopDevices(looplist = looplist)
     PR.PlotVariable_Time(variable1, value1,variable2,value2)

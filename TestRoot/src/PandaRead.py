@@ -29,12 +29,34 @@ class PandaRead(object):
         Constructor
    
          '''
-        self.vers = "0.0.2"  #
-        
+         
         self.prompt = 'Panda> '
         self.error_code = [None]* 200  # a list of 200 empty messages
         
-
+        self.tests =''
+        self.Progress()
+ 
+    def Progress(self):
+        
+        
+        self.vers = "0.00.03   "  #
+        
+        a=20*'*'
+        print(a,'   PandaRead   ',a,'\n \n')
+        print('*',' written by Andi Klein','\n')
+        print('*', 'Currently at version  ',self.vers)
+        print(a,10*'*',a,'\n\n\n')
+        
+        
+        start = self.prompt +'version'+self.vers
+        print(start,' added plotting and a MakTest facility')
+        print('\n\n\n')
+    
+    def ClearTests(self):
+        """ clears all the tests"""
+        self.tests = ''
+        
+        
     def ReadFile(self, filename):
         """ reads in the csv file from LaCanada
         """
@@ -45,10 +67,48 @@ class PandaRead(object):
         # create a list of variables
         self.variable_list =  self.lcwa_data.head(0)
 
+    def MakeTest(self, testlist):
+        """ creates queries for the table
+        the format in the list is ['a','op','val1'],'op',['b','op',val2] ...
+         escaping quotes 'madre-de-dios' becomes '\"madre-de-dios\"'
+         always the odd index is the operator between the two neighbouring tests
+        allowed operators are: and , not , the bitwise and the arithmetic
+        """
+        
+        a=testlist
+        temp1=''
+        
+        print(len(testlist))
+        for k in range(0,len(testlist),2):
+  
+            temp = '('+(a[k][0]+a[k][1]+a[k][2])+')'
+            
+            if(len(testlist)-1> k):
+                temp = temp+' '+a[k+1]+ ' '  # add operator
+            
+            temp1 = temp1+temp
+            
+        self.tests=temp1
+        print(self.tests)
+        
+        
+    def PT1(self,device , var1, var2):
+        
+        temp_data = self.ManipTable(device) # needed to get from cumulative to timeslices.
+        
+        
+        self.temp_buf = temp_data.query(self.tests)
+        self.temp_buf.plot(x=var1,y=var2)
+        
+        plt.show()
+
     
     def PlotVariable_Time(self , var1, val1 , var2,val2):
         """
         Plot a one dimensional figure of variable against time for give device
+        var: name of the value to be plotted
+        val: the actual value to be plotted. 
+        
         """
         
         #try exec for building the cut:
@@ -56,16 +116,22 @@ class PandaRead(object):
         temp_data = self.ManipTable(val1)
  
         
-        #exec('self.temp_buf = self.lcwa_data.loc[(self.lcwa_data["%s"]== "%s") \
-        #& (self.lcwa_data["%s"] > %f)] ' \
-        # % (var1 , val1 , var2 , val2))
-
-        exec('self.temp_buf = temp_data.loc[(temp_data["%s"]== "%s") \
-        & (temp_data["%s"] > %f)] ' \
-         % (var1 , val1 , var2 , val2))
-
+         
+        #exec('self.temp_buf = temp_data.loc[(temp_data["%s"]== "%s") \
+        #& (temp_data["%s"] > %f)] ' \
+         #% (var1 , val1 , var2 , val2))
         
-        self.temp_buf.plot(x='dtCreate',y='lanTxBytesRate')
+        #using query
+        #query_text = '\"var1 == @val1 and var2 > @val2\"'
+        OP= 'and'
+        text = '('+var1+'==@val1) ' +OP+ '('+var2+'>@val2)'
+        print(text)
+        #query_text = '(deviceName == @val1) and (cpuUsage >@val2)'
+        query_text = text
+        print(str(query_text))
+        #self.temp_buf = temp_data.query(query_text)
+        self.temp_buf = temp_data.query(text)
+        self.temp_buf.plot(x='dtCreate',y=var2)
         
         plt.show()
         
@@ -186,12 +252,21 @@ if __name__ == '__main__':
     
     variable1 = 'deviceName'
     value1='madre-de-dios'
-    variable2 = 'lanTxBytesRate'
-    value2 = 0.
+    variable2 = 'cpuUsage'
+    value2 = 70.
     device = 'madre-de-dios'
+    
+    
+    #testlist format: 1st test [a,operator,b], if bi is a string you have to put it into 
+    # escaping quotes 'madre-de-dios' becomes '\"madre-de-dios\"'
+    # always the odd index is the operator between the two neighbouring tests
+    # allowed operators are: and , not , the bitwise and the arithmetic
+    testlist = [['deviceName','==','\"madre-de-dios\"'],'and',['cpuUsage','>','70.']]
     
     ReduceFile = '/Users/klein/LCWA/data/new/reduce_devicedetail.csv'
     PR.ReduceTable(ReduceList = ReduceList , ReduceFile = ReduceFile)
     #PR.ManipTable(device='madre-de-dios')
+    PR.MakeTest(testlist)
+    PR.PT1('madre-de-dios','dtCreate','cpuUsage')
     PR.LoopDevices(looplist = looplist)
     PR.PlotVariable_Time(variable1, value1,variable2,value2)

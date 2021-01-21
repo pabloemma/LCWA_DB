@@ -60,7 +60,7 @@ class PandaRead(object):
     def Progress(self):
         
         
-        self.vers = "0.00.03   "  #
+        self.vers = "1.00.01   "  #
         
         a=20*'*'
         print(a,'   PandaRead   ',a,'\n \n')
@@ -70,7 +70,8 @@ class PandaRead(object):
         
         
         start = self.prompt +'version'+self.vers
-        print(start,' added plotting and a MakTest facility')
+        print(self.prompt, 'version 0.0.03',' added plotting and a MakeTest facility')
+        print(self.prompt ,'version 1.00.01','multiple graphs with correct time axis')
         print('\n\n\n')
     
     def ClearTests(self):

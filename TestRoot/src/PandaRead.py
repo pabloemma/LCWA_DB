@@ -400,7 +400,8 @@ class PandaRead(object):
         fig.suptitle(str(var1) +'  vs  '+str(var2))
         for key in self.data_buf:
             if(var1 == 'dtCreate'):
-                x = self.data_buf[key][var1].astype(int)
+                #x = self.data_buf[key][var1].astype(int)
+                x = self.data_buf[key][var1]
                 dates=[dt.datetime.fromtimestamp(ts) for ts in x]
             else:    
                 x = self.data_buf[key][var1]

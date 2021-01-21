@@ -12,11 +12,23 @@ import pandas as PDS
 
 import matplotlib.pyplot as plt
 
+import matplotlib.dates as md
+
+
 import matplotlib
 
 import sys
 
+import time
 
+import datetime
+
+import datetime as dt
+
+from random import seed
+
+from random import randint
+ 
 
 class PandaRead(object):
     '''
@@ -37,6 +49,14 @@ class PandaRead(object):
         self.Progress()
         self.data_buf = {}  # a dictionary of the reduced dataframes. Those are collected and then can be plotted
  
+        self.timecut =[0,0]
+        
+        
+        #create colorlist
+        self.MakeColorList()
+        self.SetupRnd()
+        
+        
     def Progress(self):
         
         
@@ -59,115 +79,15 @@ class PandaRead(object):
         
     def ClearPlots(self):
         self.data_buf = {}
-        
-            
-    def ReadFile(self, filename):
-        """ reads in the csv file from LaCanada
-        """
-        
-        self.lcwa_data = PDS.read_csv(filename)
-        print(" all the fields of the data file")
-        
-        # create a list of variables
-        self.variable_list =  self.lcwa_data.head(0)
-
-    def MakeTest(self, testlist):
-        """ creates queries for the table
-        the format in the list is ['a','op','val1'],'op',['b','op',val2] ...
-         escaping quotes 'madre-de-dios' becomes '\"madre-de-dios\"'
-         always the odd index is the operator between the two neighbouring tests
-        allowed operators are: and , not , the bitwise and the arithmetic
-        """
-        
-        a=testlist
-        temp1=''
-        
-        print(len(testlist))
-        for k in range(0,len(testlist),2):
-  
-            temp = '('+(a[k][0]+a[k][1]+a[k][2])+')'
-            
-            if(len(testlist)-1> k):
-                temp = temp+' '+a[k+1]+ ' '  # add operator
-            
-            temp1 = temp1+temp
-            
-        self.tests=temp1
-        print(self.tests)
-        
-        
-    def PT1(self,device):
-        """plot variables with the full test suite
-        """
-        
-        temp_data = self.ManipTable(device) # needed to get from cumulative to timeslices.
-        
-        temp_buf = temp_data.query(self.tests)
-        self.data_buf[device] =temp_buf
-        #print(self.data_buf)
-        
-        #self.data_buf[device].plot(x=var1,y=var2)
-        
-        #plt.show()
-
-    def PlotGraph(self, var1, var2):
-        
-        """ currently plots all coolected plots on one plot
-        The data to plot are in self.data_buf, which is a dictionary
-        I think in order to plot on different graphs
-        I have to fill two series and then plot them
-        """
-        #setup figures
-        count=0
-        fig = plt.figure()
-        gs = fig.add_gridspec(len(self.data_buf), hspace=0)
-        axs = gs.subplots(sharex=True, sharey=True)
-        for key in self.data_buf:
-            #self.data_buf[key].plot(x=var1,y=var2,label = key)
-            x = self.data_buf[key][var1]
-            y = self.data_buf[key][var2]
-            axs[count].plot(x,y)
-            count +=1
-            #print(axs)
-        plt.legend()
-        plt.show()
-        
     
-    def PlotVariable_Time(self , var1, val1 , var2,val2):
-        """
-        Plot a one dimensional figure of variable against time for give device
-        var: name of the value to be plotted
-        val: the actual value to be plotted. 
-        this is a fast plot and requires the first variable to be the device name
-        and the second to be a variable consisting of numbers
-        
-        """
-        
-        #try exec for building the cut:
-        
-        temp_data = self.ManipTable(val1)
- 
-        
-         
-        #exec('self.temp_buf = temp_data.loc[(temp_data["%s"]== "%s") \
-        #& (temp_data["%s"] > %f)] ' \
-         #% (var1 , val1 , var2 , val2))
-        
-        #using query
-        #query_text = '\"var1 == @val1 and var2 > @val2\"'
-
-        
-        OP= 'and'
-        text = '('+var1+'==@val1) ' +OP+ '('+var2+'>@val2)'
-        self.temp_buf = temp_data.query(text)
-        self.temp_buf.plot(x='dtCreate',y=var2)
-        
-        plt.show()
-        
     
-     
-     
-     
+    def GetTimeStamp(self,mytime):
+        """calculates the unix time stamp"""
+        #strip quotes
+        mytime=mytime.strip('"')
+        temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
+        return temp
+    
     def LoopDevices(self, looplist = None):
         """loops through all the devices litesd in looplist"""
         if(looplist == None ):
@@ -233,6 +153,334 @@ class PandaRead(object):
         
 
         return tt
+        
+    def MakeColorList(self):
+        """ I found the matplotlib handling of colors not that great
+        so, i put the colors into a list """
+       
+        colores =   {  'aliceblue':            '#F0F8FF',
+    'antiquewhite':         '#FAEBD7',
+    'aqua':                 '#00FFFF',
+    'aquamarine':           '#7FFFD4',
+    'azure':                '#F0FFFF',
+    'beige':                '#F5F5DC',
+    'bisque':               '#FFE4C4',
+    'black':                '#000000',
+    'blanchedalmond':       '#FFEBCD',
+    'blue':                 '#0000FF',
+    'blueviolet':           '#8A2BE2',
+    'brown':                '#A52A2A',
+    'burlywood':            '#DEB887',
+    'cadetblue':            '#5F9EA0',
+    'chartreuse':           '#7FFF00',
+    'chocolate':            '#D2691E',
+    'coral':                '#FF7F50',
+    'cornflowerblue':       '#6495ED',
+    'cornsilk':             '#FFF8DC',
+    'crimson':              '#DC143C',
+    'cyan':                 '#00FFFF',
+    'darkblue':             '#00008B',
+    'darkcyan':             '#008B8B',
+    'darkgoldenrod':        '#B8860B',
+    'darkgray':             '#A9A9A9',
+    'darkgreen':            '#006400',
+    'darkgrey':             '#A9A9A9',
+    'darkkhaki':            '#BDB76B',
+    'darkmagenta':          '#8B008B',
+    'darkolivegreen':       '#556B2F',
+    'darkorange':           '#FF8C00',
+    'darkorchid':           '#9932CC',
+    'darkred':              '#8B0000',
+    'darksalmon':           '#E9967A',
+    'darkseagreen':         '#8FBC8F',
+    'darkslateblue':        '#483D8B',
+    'darkslategray':        '#2F4F4F',
+    'darkslategrey':        '#2F4F4F',
+    'darkturquoise':        '#00CED1',
+    'darkviolet':           '#9400D3',
+    'deeppink':             '#FF1493',
+    'deepskyblue':          '#00BFFF',
+    'dimgray':              '#696969',
+    'dimgrey':              '#696969',
+    'dodgerblue':           '#1E90FF',
+    'firebrick':            '#B22222',
+    'floralwhite':          '#FFFAF0',
+    'forestgreen':          '#228B22',
+    'fuchsia':              '#FF00FF',
+    'gainsboro':            '#DCDCDC',
+    'ghostwhite':           '#F8F8FF',
+    'gold':                 '#FFD700',
+    'goldenrod':            '#DAA520',
+    'gray':                 '#808080',
+    'green':                '#008000',
+    'greenyellow':          '#ADFF2F',
+    'grey':                 '#808080',
+    'honeydew':             '#F0FFF0',
+    'hotpink':              '#FF69B4',
+    'indianred':            '#CD5C5C',
+    'indigo':               '#4B0082',
+    'ivory':                '#FFFFF0',
+    'khaki':                '#F0E68C',
+    'lavender':             '#E6E6FA',
+    'lavenderblush':        '#FFF0F5',
+    'lawngreen':            '#7CFC00',
+    'lemonchiffon':         '#FFFACD',
+    'lightblue':            '#ADD8E6',
+    'lightcoral':           '#F08080',
+    'lightcyan':            '#E0FFFF',
+    'lightgoldenrodyellow': '#FAFAD2',
+    'lightgray':            '#D3D3D3',
+    'lightgreen':           '#90EE90',
+    'lightgrey':            '#D3D3D3',
+    'lightpink':            '#FFB6C1',
+    'lightsalmon':          '#FFA07A',
+    'lightseagreen':        '#20B2AA',
+    'lightskyblue':         '#87CEFA',
+    'lightslategray':       '#778899',
+    'lightslategrey':       '#778899',
+    'lightsteelblue':       '#B0C4DE',
+    'lightyellow':          '#FFFFE0',
+    'lime':                 '#00FF00',
+    'limegreen':            '#32CD32',
+    'linen':                '#FAF0E6',
+    'magenta':              '#FF00FF',
+    'maroon':               '#800000',
+    'mediumaquamarine':     '#66CDAA',
+    'mediumblue':           '#0000CD',
+    'mediumorchid':         '#BA55D3',
+    'mediumpurple':         '#9370DB',
+    'mediumseagreen':       '#3CB371',
+    'mediumslateblue':      '#7B68EE',
+    'mediumspringgreen':    '#00FA9A',
+    'mediumturquoise':      '#48D1CC',
+    'mediumvioletred':      '#C71585',
+    'midnightblue':         '#191970',
+    'mintcream':            '#F5FFFA',
+    'mistyrose':            '#FFE4E1',
+    'moccasin':             '#FFE4B5',
+    'navajowhite':          '#FFDEAD',
+    'navy':                 '#000080',
+    'oldlace':              '#FDF5E6',
+    'olive':                '#808000',
+    'olivedrab':            '#6B8E23',
+    'orange':               '#FFA500',
+    'orangered':            '#FF4500',
+    'orchid':               '#DA70D6',
+    'palegoldenrod':        '#EEE8AA',
+    'palegreen':            '#98FB98',
+    'paleturquoise':        '#AFEEEE',
+    'palevioletred':        '#DB7093',
+    'papayawhip':           '#FFEFD5',
+    'peachpuff':            '#FFDAB9',
+    'peru':                 '#CD853F',
+    'pink':                 '#FFC0CB',
+    'plum':                 '#DDA0DD',
+    'powderblue':           '#B0E0E6',
+    'purple':               '#800080',
+    'rebeccapurple':        '#663399',
+    'red':                  '#FF0000',
+    'rosybrown':            '#BC8F8F',
+    'royalblue':            '#4169E1',
+    'saddlebrown':          '#8B4513',
+    'salmon':               '#FA8072',
+    'sandybrown':           '#F4A460',
+    'seagreen':             '#2E8B57',
+    'seashell':             '#FFF5EE',
+    'sienna':               '#A0522D',
+    'silver':               '#C0C0C0',
+    'skyblue':              '#87CEEB',
+    'slateblue':            '#6A5ACD',
+    'slategray':            '#708090',
+    'slategrey':            '#708090',
+    'snow':                 '#FFFAFA',
+    'springgreen':          '#00FF7F',
+    'steelblue':            '#4682B4',
+    'tan':                  '#D2B48C',
+    'teal':                 '#008080',
+    'thistle':              '#D8BFD8',
+    'tomato':               '#FF6347',
+    'turquoise':            '#40E0D0',
+    'violet':               '#EE82EE',
+    'wheat':                '#F5DEB3',    'whitesmoke':           '#F5F5F5',
+    'yellow':               '#FFFF00',
+    'yellowgreen':          '#9ACD32'}
+        self.colorlist_hex=[]
+        self.colorlist_name=[]
+        
+        for key in colores:
+            self.colorlist_hex.append(colores[key])
+            self.colorlist_name.append(key)
+        
+        
+        
+    def MakeTest(self, testlist):
+        """ creates queries for the table
+        the format in the list is ['a','op','val1'],'op',['b','op',val2] ...
+         escaping quotes 'madre-de-dios' becomes '\"madre-de-dios\"'
+         always the odd index is the operator between the two neighbouring tests
+        allowed operators are: and , not , the bitwise and the arithmetic
+        """
+        
+        a=testlist
+        temp1=''
+        
+        print(len(testlist))
+        for k in range(0,len(testlist),2):
+  
+            temp = '('+(a[k][0]+a[k][1]+a[k][2])+')'
+            
+            if(len(testlist)-1> k):
+                temp = temp+' '+a[k+1]+ ' '  # add operator
+            
+            temp1 = temp1+temp
+
+        
+        # now add the timecut if there is one
+        if(self.timecut != [0,0]):
+            temp = '(dtCreate >'+str(self.timecut[0])+') and (dtCreate <'+str(self.timecut[1])+')'
+            temp1 = temp1+'and'+temp
+          
+        self.tests=temp1
+        print('\n ',self.prompt,'all the cuts in the current selection    ',self.tests)
+        print('\n')
+        
+    def MakeTimeCut(self, time_low = None, time_high = None):
+        """ converts the time format
+        "%Y-%m-%d %h:%m:%s"
+        into unix time stamp and creates a test
+        if both time and time_high are given it uses this timewindow,
+        otherwise it just uses time for operations """
+        
+        if (time_high != None):
+            time_l =self.GetTimeStamp(time_low)
+            time_h =self.GetTimeStamp(time_high)
+            self.timecut = [time_l,time_h]
+            
+        else:
+            time_l = self.GetTimeStamp(time_low)
+            self.timecut = [time_l,0]
+            
+        
+        
+        
+    def PT1(self,device):
+        """plot variables with the full test suite
+        """
+        
+        temp_data = self.ManipTable(device) # needed to get from cumulative to timeslices.
+        
+        temp_buf = temp_data.query(self.tests)
+        self.data_buf[device] =temp_buf
+        #print(self.data_buf)
+        
+        #self.data_buf[device].plot(x=var1,y=var2)
+        
+        #plt.show()
+
+    def PlotGraph(self, var1, var2,symbol=None,color1=None):
+        
+        """ currently plots all collected plots on one plot
+        The data to plot are in self.data_buf, which is a dictionary
+        I think in order to plot on different graphs
+        I have to fill two series and then plot them
+        """
+        #setup figures
+        
+        if(symbol==None):
+            symbol='-'  #solidline
+        if(color1!=None):
+            symbol=symbol+color1
+        count=0
+        fig = plt.figure(figsize = (10,12), dpi= 80)
+        gs = fig.add_gridspec(len(self.data_buf), hspace=0)
+        axs = gs.subplots(sharex=True, sharey=True)
+        
+        
+        fig.suptitle(str(var1) +'  vs  '+str(var2))
+        for key in self.data_buf:
+            if(var1 == 'dtCreate'):
+                x = self.data_buf[key][var1].astype(int)
+                dates=[dt.datetime.fromtimestamp(ts) for ts in x]
+            else:    
+                x = self.data_buf[key][var1]
+            y = self.data_buf[key][var2]
+            if(color1 == None): # randomly pcik color from colorlis_hex, we have 144 one to pick from ( iremoved white ones)
+                pick =self.colorlist_hex[randint(0, 144)]
+                if(var1 == 'dtCreate'):
+                    axs[count].plot(dates,y,symbol,label = key, color=pick)
+                else:
+                    axs[count].plot(x,y,symbol,label = key, color=pick)
+            else: 
+                if(var1 == 'dtCreate'):
+                    axs[count].plot(dates,y,symbol,label = key)
+                else:
+                    axs[count].plot(x,y,symbol,label = key)
+
+                
+                  
+            
+            
+            
+            if(var1 == 'dtCreate'):
+                #axs[count].xaxis.set_major_locator(md.MinuteLocator(interval=360))
+                axs[count].xaxis.set_major_formatter(md.DateFormatter('%m-%d %H:%M'))
+
+            axs[count].legend(loc='upper right')
+            count +=1
+            #print(axs)
+
+        if(var1 == 'dtCreate'):
+            plt.xticks(rotation = 90)
+            
+        plt.legend()
+        
+        plt.show()
+        
+    
+    def PlotVariable_Time(self , var1, val1 , var2,val2):
+        """
+        Plot a one dimensional figure of variable against time for give device
+        var: name of the value to be plotted
+        val: the actual value to be plotted. 
+        this is a fast plot and requires the first variable to be the device name
+        and the second to be a variable consisting of numbers
+        
+        """
+        
+        #try exec for building the cut:
+        
+        temp_data = self.ManipTable(val1)
+ 
+        
+         
+        #exec('self.temp_buf = temp_data.loc[(temp_data["%s"]== "%s") \
+        #& (temp_data["%s"] > %f)] ' \
+         #% (var1 , val1 , var2 , val2))
+        
+        #using query
+        #query_text = '\"var1 == @val1 and var2 > @val2\"'
+
+        
+        OP= 'and'
+        text = '('+var1+'==@val1) ' +OP+ '('+var2+'>@val2)'
+        self.temp_buf = temp_data.query(text)
+        self.temp_buf.plot(x='dtCreate',y=var2)
+        
+        plt.show()
+        
+    
+    def ReadFile(self, filename):
+        """ reads in the csv file from LaCanada
+        """
+        
+        self.lcwa_data = PDS.read_csv(filename)
+        print(" all the fields of the data file")
+        
+        # create a list of variables
+        self.variable_list =  self.lcwa_data.head(0)
+  
+     
+     
 
     def ReduceTable(self,ReduceList=None,ReduceFile=None):
         """
@@ -245,8 +493,14 @@ class PandaRead(object):
         if(ReduceFile != None):
             self.newtab1.to_csv(ReduceFile)
             
-            
-     
+    def SetupRnd(self):
+        """ sets up the random number generator for the color scheme"""
+        
+        # generate random integer values
+       # seed random number generator
+        seed(1)
+        # generate some integers
+    
     
     def ErrorCode(self,code):
         """
@@ -297,8 +551,13 @@ if __name__ == '__main__':
     ReduceFile = '/Users/klein/LCWA/data/new/reduce_devicedetail.csv'
     PR.ReduceTable(ReduceList = ReduceList , ReduceFile = ReduceFile)
     #PR.ManipTable(device='madre-de-dios')
+    
+    PR.MakeTimeCut(time_low="2021-01-08 00:00:01", time_high="2021-01-09 00:00:01")
+    
+    
     PR.MakeTest(testlist)
     #PR.PT1('madre-de-dios')
     PR.LoopDevices(looplist = looplist)
-    PR.PlotGraph('dtCreate','cpuUsage')
-    PR.PlotVariable_Time(variable1, value1,variable2,value2)
+    
+    PR.PlotGraph('dtCreate','cpuUsage',symbol = 'd')
+    #PR.PlotVariable_Time(variable1, value1,variable2,value2)

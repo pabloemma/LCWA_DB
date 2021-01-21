@@ -57,7 +57,10 @@ class PandaRead(object):
         """ clears all the tests"""
         self.tests = ''
         
+    def ClearPlots(self):
+        self.data_buf = {}
         
+            
     def ReadFile(self, filename):
         """ reads in the csv file from LaCanada
         """
@@ -93,7 +96,7 @@ class PandaRead(object):
         print(self.tests)
         
         
-    def PT1(self,device , var1, var2):
+    def PT1(self,device):
         """plot variables with the full test suite
         """
         
@@ -111,11 +114,23 @@ class PandaRead(object):
         
         """ currently plots all coolected plots on one plot
         The data to plot are in self.data_buf, which is a dictionary
+        I think in order to plot on different graphs
+        I have to fill two series and then plot them
         """
+        #setup figures
+        count=0
+        fig = plt.figure()
+        gs = fig.add_gridspec(len(self.data_buf), hspace=0)
+        axs = gs.subplots(sharex=True, sharey=True)
         for key in self.data_buf:
-            self.data_buf[key].plot(x=var1,y=var2,label = key)
-            plt.show()
-        
+            #self.data_buf[key].plot(x=var1,y=var2,label = key)
+            x = self.data_buf[key][var1]
+            y = self.data_buf[key][var2]
+            axs[count].plot(x,y)
+            count +=1
+            #print(axs)
+        plt.legend()
+        plt.show()
         
     
     def PlotVariable_Time(self , var1, val1 , var2,val2):
@@ -161,7 +176,8 @@ class PandaRead(object):
         else:
             for k in looplist:
                 print(self.prompt," currently working on ", k)
-                self.ManipTable(k)
+                #self.ManipTable(k)
+                self.PT1(k)
         
         return 1    
    
@@ -275,13 +291,14 @@ if __name__ == '__main__':
     # escaping quotes 'madre-de-dios' becomes '\"madre-de-dios\"'
     # always the odd index is the operator between the two neighbouring tests
     # allowed operators are: and , not , the bitwise and the arithmetic
-    testlist = [['deviceName','==','\"madre-de-dios\"'],'and',['cpuUsage','>','70.']]
+    #testlist = [['deviceName','==','\"madre-de-dios\"'],'and',['cpuUsage','>','70.']]
+    testlist = [['cpuUsage','>','70.']]
     
     ReduceFile = '/Users/klein/LCWA/data/new/reduce_devicedetail.csv'
     PR.ReduceTable(ReduceList = ReduceList , ReduceFile = ReduceFile)
     #PR.ManipTable(device='madre-de-dios')
     PR.MakeTest(testlist)
-    PR.PT1('madre-de-dios','dtCreate','cpuUsage')
-    PR.PlotGraph('dtCreate','cpuUsage')
+    #PR.PT1('madre-de-dios')
     PR.LoopDevices(looplist = looplist)
+    PR.PlotGraph('dtCreate','cpuUsage')
     PR.PlotVariable_Time(variable1, value1,variable2,value2)

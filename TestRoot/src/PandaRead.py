@@ -519,8 +519,8 @@ class PandaRead(object):
             return
         
 if __name__ == '__main__':
-    
-    filename = '/Users/klein/LCWA/data/new/devicedetail.csv'
+    master_dir = '/Users/klein/LCWA/data/new/'
+    filename = master_dir+'devicedetail.csv'
     
     PR=PandaRead()
     PR.ReadFile(filename)
@@ -549,8 +549,7 @@ if __name__ == '__main__':
     # allowed operators are: and , not , the bitwise and the arithmetic
     #testlist = [['deviceName','==','\"madre-de-dios\"'],'and',['cpuUsage','>','70.']]
     testlist = [['cpuUsage','>','70.']]
-    
-    ReduceFile = '/Users/klein/LCWA/data/new/reduce_devicedetail.csv'
+    ReduceFile = master_dir+'reduce_devicedetail.csv'
     PR.ReduceTable(ReduceList = ReduceList , ReduceFile = ReduceFile)
     #PR.ManipTable(device='madre-de-dios')
     

@@ -28,6 +28,8 @@ import datetime as dt
 from random import seed
 
 from random import randint
+
+import numpy as np
  
 
 class PandaRead(object):
@@ -119,8 +121,8 @@ class PandaRead(object):
         #newtab.to_csv(ReduceFile)
         n = len(newtab.index)
         #first rearrange time
-        s1 = (PDS.to_datetime(newtab['dtCreate'][0:n-1].reset_index(drop=True)).astype(int)  + PDS.to_datetime(newtab['dtCreate'][1:n].reset_index(drop=True)).astype(int))/2./1.e9
-        dt = PDS.to_datetime(newtab['dtCreate'][1:n].reset_index(drop=True)).astype(int)/1.e9  - PDS.to_datetime(newtab['dtCreate'][0:n-1].reset_index(drop=True)).astype(int)/1.e9
+        s1 = (PDS.to_datetime(newtab['dtCreate'][0:n-1].reset_index(drop=True)).astype(np.int64)  + PDS.to_datetime(newtab['dtCreate'][1:n].reset_index(drop=True)).astype(np.int64))/2./1.e9
+        dt = PDS.to_datetime(newtab['dtCreate'][1:n].reset_index(drop=True)).astype(np.int64)/1.e9  - PDS.to_datetime(newtab['dtCreate'][0:n-1].reset_index(drop=True)).astype(np.int64)/1.e9
         s2 = (newtab['lanTxBytes'][1:n].reset_index(drop=True)  - newtab['lanTxBytes'][0:n-1].reset_index(drop=True))/dt
         s3 = (newtab['lanRxBytes'][1:n].reset_index(drop=True)  - newtab['lanRxBytes'][0:n-1].reset_index(drop=True))/dt
         s4 = (newtab['wlanTxBytes'][1:n].reset_index(drop=True)  - newtab['wlanTxBytes'][0:n-1].reset_index(drop=True))/dt

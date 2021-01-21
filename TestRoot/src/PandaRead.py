@@ -62,7 +62,7 @@ class PandaRead(object):
     def Progress(self):
         
         
-        self.vers = "1.00.01   "  #
+        self.vers = "1.00.02   "  #
         
         a=20*'*'
         print(a,'   PandaRead   ',a,'\n \n')
@@ -74,6 +74,7 @@ class PandaRead(object):
         start = self.prompt +'version'+self.vers
         print(self.prompt, 'version 0.0.03',' added plotting and a MakeTest facility')
         print(self.prompt ,'version 1.00.01','multiple graphs with correct time axis')
+        print(self.prompt ,'version 1.00.02','multicolor, different markers')
         print('\n\n\n')
     
     def ClearTests(self):
@@ -519,13 +520,20 @@ class PandaRead(object):
             return
         
 if __name__ == '__main__':
+
+    
+    # where you put your copy of the raw data, will also be the place where you will have the reduced file
     master_dir = '/Users/klein/LCWA/data/new/'
+    
     filename = master_dir+'devicedetail.csv'
     
+    #instantiate the class
     PR=PandaRead()
+    #read in the raw datafile
     PR.ReadFile(filename)
     
-    # the list of columns we want to keep:
+    # the list of columns we want to keep: If yo want more to keep add the names here. the
+    #order does not matter
     ReduceList = ["apMac","cpuUsage","deviceIp","deviceName","dtCreate","lanRxBytes", \
               "lanRxErrors","lanRxPackets","lanTxBytes","lanTxErrors","lanTxPackets",\
               "loadavg","memBuffers","memFree","memTotal","remoteIP",\
@@ -533,14 +541,15 @@ if __name__ == '__main__':
               "wlanRxErrRetries","wlanRxPackets","wlanRxRate","wlanTxBytes",\
               "wlanTxErrors","wlanTxPackets","wlanTxRate"]
     
+    # this is the list of the variables you can plot:
+    #'dtCreate','lanTxBytesRate','lanRxBytesRate','wlanTxBytesRate','wlanRxBytesRate' , \
+    #'lanTxErrorRate','lanRxErrorRate','wlanTxErrorRate','wlanRxErrorRate', \
+    #'lanTxPacketsRate','lanRxPacketsRate','wlanTxPacketsRate','wlanRxPacketsRate', \
+    #'cpuUsage','deviceName']
+    
     looplist =[ 'RidgeRoad5','madre-de-dios', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
 
     
-    variable1 = 'deviceName'
-    value1='madre-de-dios'
-    variable2 = 'cpuUsage'
-    value2 = 70.
-    device = 'madre-de-dios'
     
     
     #testlist format: 1st test [a,operator,b], if bi is a string you have to put it into 
@@ -594,10 +603,19 @@ if __name__ == '__main__':
     
     
     #usually you won't need the next routines, they are called from within the program
-    #PR.ManipTable(device='madre-de-dios')
-
     #PR.PT1('madre-de-dios')
  
+ 
+    #If you want just a quick answer for a specific device
+    #uncomment the next few lines
+    #variable1 = 'deviceName'
+    #value1='madre-de-dios'
+    #variable2 = 'cpuUsage'
+    #value2 = 70.
+    #device = 'madre-de-dios'
+
+    #PR.ManipTable(device=device)
+
     #PR.PlotVariable_Time(variable1, value1,variable2,value2)
     
     

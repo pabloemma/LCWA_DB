@@ -391,8 +391,6 @@ class PandaRead(object):
         
         if(symbol==None):
             symbol='-'  #solidline
-        if(color1!=None):
-            symbol=symbol+color1
         count=0
         fig = plt.figure(figsize = (10,12), dpi= 80)
         gs = fig.add_gridspec(len(self.data_buf), hspace=0)
@@ -416,9 +414,9 @@ class PandaRead(object):
                     axs[count].plot(x,y,symbol,label = key, color=pick)
             else: 
                 if(var1 == 'dtCreate'):
-                    axs[count].plot(dates,y,symbol,label = key)
+                    axs[count].plot(dates,y,symbol,label = key , color=color1)
                 else:
-                    axs[count].plot(x,y,symbol,label = key)
+                    axs[count].plot(x,y,symbol,label = key, color=color1)
 
                 
                   
@@ -549,18 +547,59 @@ if __name__ == '__main__':
     # escaping quotes 'madre-de-dios' becomes '\"madre-de-dios\"'
     # always the odd index is the operator between the two neighbouring tests
     # allowed operators are: and , not , the bitwise and the arithmetic
+    #
+    #example fo a test list
     #testlist = [['deviceName','==','\"madre-de-dios\"'],'and',['cpuUsage','>','70.']]
+    # the important thing to notice is that tests are always grouped in units of three and then a logical operatore connects those
     testlist = [['cpuUsage','>','70.']]
+    
+    
+    # now we reduce the file to calculable units and convert to rates from cummulative
+    # the reducefile is the new file created from the original one
     ReduceFile = master_dir+'reduce_devicedetail.csv'
     PR.ReduceTable(ReduceList = ReduceList , ReduceFile = ReduceFile)
-    #PR.ManipTable(device='madre-de-dios')
+
     
+    
+    #here we set a time cut. if none is used all the times in the file will be used.
+    # if you just give a low limit, all from low limit to end of file will be used.
+    #the timecut will be applied to the cuts define in testlist
     PR.MakeTimeCut(time_low="2021-01-08 00:00:01", time_high="2021-01-09 00:00:01")
     
     
     PR.MakeTest(testlist)
-    #PR.PT1('madre-de-dios')
+    
+    #Here we loop over all devices defined in the looplist
+    #they are all plotted
     PR.LoopDevices(looplist = looplist)
     
+    
+    #here we define what to plot
+    #if you want to have time on the x axis, the first value has to be dtCreate
+    # the symbol defines the marker, at https://matplotlib.org/3.3.3/api/markers_api.html
+    #you can find valid markers
+    # here a few '-' : full line, 'o':circle,'d':diamond etc
+    # you can also add a color by using color ='g' or 'k' (black),'b' etc
+    # the possible colors are here https://matplotlib.org/3.2.1/tutorials/colors/colors.html
+    # the following directives would all be okay
+    #PR.PlotGraph('dtCreate','cpuUsage',symbol = 'd',color1='aqua')
+    #PR.PlotGraph('dtCreate','cpuUsage',symbol = 'd',color1='g')
+    #
+    #important: if you do not select a color, every graph will have a different color, if you give the keyword color1=
+    #the all the graphs will be in the same color
+    
+    
     PR.PlotGraph('dtCreate','cpuUsage',symbol = 'd')
+    
+    
+    
+    #usually you won't need the next routines, they are called from within the program
+    #PR.ManipTable(device='madre-de-dios')
+
+    #PR.PT1('madre-de-dios')
+ 
     #PR.PlotVariable_Time(variable1, value1,variable2,value2)
+    
+    
+    
+    

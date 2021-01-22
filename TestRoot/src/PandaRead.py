@@ -467,6 +467,8 @@ class PandaRead(object):
         OP= 'and'
         text = '('+var1+'==@val1) ' +OP+ '('+var2+'>@val2)'
         self.temp_buf = temp_data.query(text)
+                       
+
         self.temp_buf.plot(x='dtCreate',y=var2)
         
         plt.show()

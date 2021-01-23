@@ -381,6 +381,59 @@ class PandaRead(object):
         
         #plt.show()
 
+    def PlotGraphDevice(self, device ,symbol=None,color1=None):
+        """
+        Loops thorugh all the data of one device and plots it on one page
+        """
+        if(symbol==None):
+            symbol='-'  #solidline
+
+        
+        temp_data = self.ManipTable(device) # needed to get from cumulative to timeslices.
+        
+        temp_buf = temp_data.query(self.tests)
+        # now loop through different variables
+        temp_list = temp_buf.columns.tolist()
+        print(type(temp_list))
+        #temp_list =['lanRxBytesRate','wlanTxBytesRate']
+        
+        
+        
+        
+        
+        
+        count=0
+        fig = plt.figure(figsize = (10,12), dpi= 80)
+        print(len(temp_list))
+        gs = fig.add_gridspec(len(temp_list), hspace=0)
+        axs = gs.subplots(sharex=True)
+        fig.suptitle('Health of '+device)
+        # main loop
+        for val in temp_list:
+            if(val != 'dtCreate'):
+                x = temp_buf['dtCreate']
+                dates=[dt.datetime.fromtimestamp(ts) for ts in x]
+                y = temp_buf[val]
+        
+                if(color1 == None): # randomly pcik color from colorlis_hex, we have 144 one to pick from ( iremoved white ones)
+                    pick =self.colorlist_hex[randint(0, 144)]
+
+                    axs[count].plot(dates,y,symbol,label = val, color=pick)
+                else: 
+                    
+                    axs[count].plot(dates,y,symbol,label = val , color=color1)
+                axs[count].legend(loc='upper right')
+                count +=1
+            #print(axs)
+  
+        plt.legend()
+        
+        plt.show()
+                
+
+     
+        
+
     def PlotGraph(self, var1, var2,symbol=None,color1=None):
         
         """ currently plots all collected plots on one plot
@@ -452,8 +505,6 @@ class PandaRead(object):
         
         #try exec for building the cut:
         
-        temp_data = self.ManipTable(val1)
- 
         
          
         #exec('self.temp_buf = temp_data.loc[(temp_data["%s"]== "%s") \
@@ -579,6 +630,8 @@ if __name__ == '__main__':
     
     
     PR.MakeTest(testlist)
+    
+    PR.PlotGraphDevice('madre-de-dios', symbol='d', color1 = 'g')
     
     #Here we loop over all devices defined in the looplist
     #they are all plotted

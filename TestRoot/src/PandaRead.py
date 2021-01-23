@@ -30,6 +30,11 @@ from random import seed
 from random import randint
 
 import numpy as np
+
+from pdfrw import PdfReader, PdfWriter
+
+
+import os
  
 
 class PandaRead(object):
@@ -53,6 +58,8 @@ class PandaRead(object):
  
         self.timecut =[0,0]
         
+        self.pdf_file_list =[]
+        
         
         #create colorlist
         self.MakeColorList()
@@ -62,7 +69,7 @@ class PandaRead(object):
     def Progress(self):
         
         
-        self.vers = "1.00.02   "  #
+        self.vers = "1.01.01   "  #
         
         a=20*'*'
         print(a,'   PandaRead   ',a,'\n \n')
@@ -75,6 +82,7 @@ class PandaRead(object):
         print(self.prompt, 'version 0.0.03',' added plotting and a MakeTest facility')
         print(self.prompt ,'version 1.00.01','multiple graphs with correct time axis')
         print(self.prompt ,'version 1.00.02','multicolor, different markers')
+        print(self.prompt ,'version 1.01.01','loops thorugh list of devices and creates a status health for all')
         print('\n\n\n')
     
     def ClearTests(self):
@@ -92,8 +100,12 @@ class PandaRead(object):
         temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
         return temp
     
-    def LoopDevices(self, looplist = None):
-        """loops through all the devices litesd in looplist"""
+    def LoopDevices(self, looplist = None, Plot=False,plotdir=None , plotting = False):
+        """loops through all the devices listed in looplist"""
+        
+        #reset list of pdf file names, needed for adding pdf files together
+        self.pdf_file_list=[]
+        
         if(looplist == None ):
             self.ErrorCode(101)
             return
@@ -102,7 +114,28 @@ class PandaRead(object):
                 print(self.prompt," currently working on ", k)
                 #self.ManipTable(k)
                 self.PT1(k)
+                print(type(k))
+                if(Plot):
+                    #self.PlotDeviceStatus(self, k , plotdir = plotdir)
+                    self.PlotDeviceStatus(k ,symbol='d',color1='b', plotdir = plotdir , plotting = plotting)
         
+        # done with looping merge all files inot one large one
+        if(plotdir != None):
+            masterfile = plotdir+'alldevices.pdf'
+        
+
+            writer = PdfWriter()
+            for inpfn in self.pdf_file_list:
+                writer.addpages(PdfReader(inpfn).pages)
+                writer.write(masterfile)
+            print(self.prompt,'figure saved in ',masterfile)
+        
+        
+        
+            
+            
+            
+ 
         return 1    
    
     
@@ -381,9 +414,11 @@ class PandaRead(object):
         
         #plt.show()
 
-    def PlotGraphDevice(self, device ,symbol=None,color1=None):
+    def PlotDeviceStatus(self, device ,symbol=None,color1=None, plotdir = None , plotting = True):
         """
         Loops thorugh all the data of one device and plots it on one page
+        if plotdir is not None we save the plot file
+        if plotting is false, no screen output
         """
         if(symbol==None):
             symbol='-'  #solidline
@@ -428,7 +463,17 @@ class PandaRead(object):
   
         plt.legend()
         
-        plt.show()
+        #save the plot
+    
+        if(plotdir != None):
+            plotfile = plotdir+'status_'+device+'.pdf'
+            print(self.prompt,'figure saved in ',plotfile)
+            plt.savefig(plotfile,dpi=300)
+            
+            # add name to list of created files
+            self.pdf_file_list.append(plotfile)
+        if(plotting):
+            plt.show()
                 
 
      
@@ -631,11 +676,14 @@ if __name__ == '__main__':
     
     PR.MakeTest(testlist)
     
-    PR.PlotGraphDevice('madre-de-dios', symbol='d', color1 = 'g')
+    
+    # for a single device status
+    #PR.PlotDeviceStatus('madre-de-dios', symbol='d', color1 = 'g',plotdir = master_dir)
     
     #Here we loop over all devices defined in the looplist
     #they are all plotted
-    PR.LoopDevices(looplist = looplist)
+    #with plotting: true, there will be a screen plotr as well as saving the plots
+    PR.LoopDevices(looplist = looplist,Plot=True,plotdir=master_dir,plotting = False)
     
     
     #here we define what to plot

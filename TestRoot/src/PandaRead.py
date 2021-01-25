@@ -671,7 +671,7 @@ if __name__ == '__main__':
     #here we set a time cut. if none is used all the times in the file will be used.
     # if you just give a low limit, all from low limit to end of file will be used.
     #the timecut will be applied to the cuts define in testlist
-    PR.MakeTimeCut(time_low="2021-01-08 00:00:01", time_high="2021-01-09 00:00:01")
+    PR.MakeTimeCut(time_low="2021-01-18 00:00:01", time_high="2021-01-23 14:00:00")
     
     
     PR.MakeTest(testlist)
@@ -683,7 +683,7 @@ if __name__ == '__main__':
     #Here we loop over all devices defined in the looplist
     #they are all plotted
     #with plotting: true, there will be a screen plotr as well as saving the plots
-    PR.LoopDevices(looplist = looplist,Plot=True,plotdir=master_dir,plotting = False)
+    PR.LoopDevices(looplist = looplist,Plot=True,plotdir=master_dir,plotting = True)
     
     
     #here we define what to plot

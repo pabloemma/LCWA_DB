@@ -440,12 +440,12 @@ class PandaRead(object):
         count=0
         fig = plt.figure(figsize = (10,12), dpi= 80)
         print(len(temp_list))
-        gs = fig.add_gridspec(len(temp_list), hspace=0)
+        gs = fig.add_gridspec(len(temp_list)-2, hspace=0)
         axs = gs.subplots(sharex=True)
         fig.suptitle('Health of '+device)
         # main loop
         for val in temp_list:
-            if(val != 'dtCreate'):
+            if(val != 'dtCreate') and val != 'deviceName':
                 x = temp_buf['dtCreate']
                 dates=[dt.datetime.fromtimestamp(ts) for ts in x]
                 y = temp_buf[val]
@@ -671,7 +671,7 @@ if __name__ == '__main__':
     #here we set a time cut. if none is used all the times in the file will be used.
     # if you just give a low limit, all from low limit to end of file will be used.
     #the timecut will be applied to the cuts define in testlist
-    PR.MakeTimeCut(time_low="2021-01-18 00:00:01", time_high="2021-01-23 14:00:00")
+    PR.MakeTimeCut(time_low="2021-01-22 14:00:00", time_high="2021-01-23 14:00:00")
     
     
     PR.MakeTest(testlist)

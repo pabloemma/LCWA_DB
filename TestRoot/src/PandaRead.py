@@ -406,6 +406,12 @@ class PandaRead(object):
         
         temp_data = self.ManipTable(device) # needed to get from cumulative to timeslices.
         
+        try:
+            self.tests
+        except NameError:
+            print('you have not defined any tests')
+            return
+        
         temp_buf = temp_data.query(self.tests)
         self.data_buf[device] =temp_buf
         #print(self.data_buf)
@@ -488,13 +494,16 @@ class PandaRead(object):
         """
         #setup figures
         
+
+ 
+        
+        
         if(symbol==None):
             symbol='-'  #solidline
         count=0
         fig = plt.figure(figsize = (10,12), dpi= 80)
         gs = fig.add_gridspec(len(self.data_buf), hspace=0)
         axs = gs.subplots(sharex=True, sharey=True)
-        
         
         fig.suptitle(str(var1) +'  vs  '+str(var2))
         for key in self.data_buf:
@@ -520,7 +529,8 @@ class PandaRead(object):
                 
                   
             
-            
+            #set yaxis limit to min =0.
+            axs[count].set_ylim(ymin=0.)
             
             if(var1 == 'dtCreate'):
                 #axs[count].xaxis.set_major_locator(md.MinuteLocator(interval=360))
@@ -683,7 +693,9 @@ if __name__ == '__main__':
     #Here we loop over all devices defined in the looplist
     #they are all plotted
     #with plotting: true, there will be a screen plotr as well as saving the plots
-    PR.LoopDevices(looplist = looplist,Plot=True,plotdir=master_dir,plotting = True)
+    
+    
+    PR.LoopDevices(looplist = looplist,Plot=False,plotdir=master_dir,plotting = True)
     
     
     #here we define what to plot
@@ -701,7 +713,7 @@ if __name__ == '__main__':
     #the all the graphs will be in the same color
     
     
-    PR.PlotGraph('dtCreate','cpuUsage',symbol = 'd')
+    PR.PlotGraph('dtCreate','lanTxBytesRate',symbol = 'd')
     
     
     

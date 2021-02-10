@@ -381,6 +381,7 @@ class PandaRead(object):
         print('\n ',self.prompt,'all the cuts in the current selection    ',self.tests)
         print('\n')
         
+        
     def MakeTimeCut(self, time_low = None, time_high = None):
         """ converts the time format
         "%Y-%m-%d %h:%m:%s"
@@ -464,6 +465,7 @@ class PandaRead(object):
                     
                     axs[count].plot(dates,y,symbol,label = val , color=color1)
                 axs[count].legend(loc='upper right')
+                axs[count].set_ylim(ymin=0.)
                 count +=1
             #print(axs)
   
@@ -566,17 +568,43 @@ class PandaRead(object):
         #& (temp_data["%s"] > %f)] ' \
          #% (var1 , val1 , var2 , val2))
         
+        
+        fig = plt.figure(figsize = (10,12), dpi= 80)
+
+        ax = fig.add_subplot(111)
         #using query
         #query_text = '\"var1 == @val1 and var2 > @val2\"'
-
-        
+        device=val1
+        temp_data=self.ManipTable(device)
+       
         OP= 'and'
         text = '('+var1+'==@val1) ' +OP+ '('+var2+'>@val2)'
-        self.temp_buf = temp_data.query(text)
-                       
-
-        self.temp_buf.plot(x='dtCreate',y=var2)
+        print(val1)
         
+        # add tests and time slice onto it
+        if(self.tests !=''):
+            text = text +' and '+self.tests
+        self.temp_buf = temp_data.query(text)
+        
+
+        fig.suptitle(text,fontsize=10)
+                       
+        x = self.temp_buf['dtCreate']
+        dates=[dt.datetime.fromtimestamp(ts) for ts in x]
+        y = self.temp_buf[var2]
+
+        #self.temp_buf.plot(x='dtCreate',y=var2)
+        #self.temp_buf.plot(x='dtCreate',y=var2)
+        ax.plot(dates,y,'d',label = device)
+        ax.xaxis.set_major_formatter(md.DateFormatter('%m-%d %H:%M'))
+        ax.legend(loc = 
+                  'upper right')
+        
+        
+        ax.set_xlabel('Date',fontsize = 15)
+        ax.set_ylabel(var2,fontsize=15)
+        plt.xticks(rotation = 90)
+
         plt.show()
         
     
@@ -723,15 +751,15 @@ if __name__ == '__main__':
  
     #If you want just a quick answer for a specific device
     #uncomment the next few lines
-    #variable1 = 'deviceName'
-    #value1='madre-de-dios'
-    #variable2 = 'cpuUsage'
-    #value2 = 70.
-    #device = 'madre-de-dios'
+    variable1 = 'deviceName'
+    value1='madre-de-dios'
+    variable2 = 'lanTxBytesRate'
+    value2 = 70.
+    device = value1
 
     #PR.ManipTable(device=device)
 
-    #PR.PlotVariable_Time(variable1, value1,variable2,value2)
+    PR.PlotVariable_Time(variable1, value1,variable2,value2)
     
     
     

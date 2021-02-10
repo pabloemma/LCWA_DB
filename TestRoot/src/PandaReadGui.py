@@ -12,6 +12,8 @@ import subprocess as sp
 import json
 import yaml
 from datetime import datetime
+from asyncio.locks import Event
+#from builtins import False
 
 sys.path.insert(2,'/Users/klein/git/LCWA/src')
 sys.path.insert(3,'/Users/klein/git/LCWA_UNMS/RRD_SNMP/src')
@@ -118,6 +120,15 @@ class MyFrame(wx.Frame):
         
         #log into the system
         #self.OnLogin(0)
+        self.looplist = ['RidgeRoad5','madre-de-dios', 'camp-stoney', 'camp-stoney-2', 'hampton-road-986', 'la-posta', 'la-posta-0', 'la-posta-4', 'la-posta-5', 'old-santa-fe-trail', 'old-santa-fe-trail-1216', 'old-santa-fe-trail-14', 'stone-canyon-road-1120', 'wild-turkey-way']    
+
+        self.ReduceList = ["apMac","cpuUsage","deviceIp","deviceName","dtCreate","lanRxBytes", \
+              "lanRxErrors","lanRxPackets","lanTxBytes","lanTxErrors","lanTxPackets",\
+              "loadavg","memBuffers","memFree","memTotal","remoteIP",\
+              "remoteMac","wlanRxBytes","wlanRxErrors","wlanRxErrOther",\
+              "wlanRxErrRetries","wlanRxPackets","wlanRxRate","wlanTxBytes",\
+              "wlanTxErrors","wlanTxPackets","wlanTxRate"]
+
  
         # Set size of Frame
         
@@ -156,12 +167,12 @@ class MyFrame(wx.Frame):
         menubar.Append(service_menu,"Services")
 
         self.CreateMenuItem(service_menu, "Reduce Table",self.OnReduceTable)
-        self.CreateMenuItem(service_menu, "Get Device List",self.OnGetDeviceList)
+        self.CreateMenuItem(service_menu, "Loop over devices",self.OnLoopDevices)
         self.CreateMenuItem(service_menu, "Get SpeedBoxFile",self.OnGetSpeedBoxFile)
         self.CreateMenuItem(service_menu, "Get Variables",self.OnGetVariables)
         self.CreateMenuItem(service_menu, "Set Device",self.OnSetDevice)
         
-        self.CreateMenuItem(service_menu, "Scan Rx and Tx",self.OnScanRXTX)
+        self.CreateMenuItem(service_menu, "Create tests",self.OnSetTest)
 
         plot_menu = wx.Menu()
         menubar.Append(plot_menu,"plots")
@@ -233,13 +244,7 @@ class MyFrame(wx.Frame):
     def OnReduceTable(self,event):
         
         
-        self.ReduceList = ["apMac","cpuUsage","deviceIp","deviceName","dtCreate","lanRxBytes", \
-              "lanRxErrors","lanRxPackets","lanTxBytes","lanTxErrors","lanTxPackets",\
-              "loadavg","memBuffers","memFree","memTotal","remoteIP",\
-              "remoteMac","wlanRxBytes","wlanRxErrors","wlanRxErrOther",\
-              "wlanRxErrRetries","wlanRxPackets","wlanRxRate","wlanTxBytes",\
-              "wlanTxErrors","wlanTxPackets","wlanTxRate"]
-        
+         
 
         self.ReduceFile = self.outputdir+self.outputfile
         self.PRI.ReduceTable(ReduceList = self.ReduceList , ReduceFile = self.ReduceFile)
@@ -247,30 +252,60 @@ class MyFrame(wx.Frame):
         return
 
         # Now read the tree from the file
-         
-    def OnLogin(self,event):
-        """
-        Asks for IP,username and password
-        """
-        print("OnLogin")
-        TF=LoginFrame()
+        
+    def OnLoopDevices(self,event):
+        
+        
+        
+        self.Plot=False
+        self.Screen = False
+        frame = wx.Frame(parent = None,title ='Loop Plot Control',size = (400,140),pos =(100,100))
+        panel = wx.Panel(frame,-1) 
+        frame.Show(show=True)
+
+        self.cb1=wx.CheckBox(panel,-1,'Plot?',(10,40),(350,20))
+        self.cb2=wx.CheckBox(panel,-1,'Screen?',(10,60),(350,20))
+        self.button = wx.Button(panel,-1,"Close",pos = (10,80),size=(40,40))
+        self.cb1.Bind(wx.EVT_CHECKBOX,self.OnLoopChecked) 
+        self.cb2.Bind(wx.EVT_CHECKBOX,self.OnLoopChecked) 
+        self.Centre() 
+        self.Show(True) 
+        self.button.Bind(wx.EVT_BUTTON, self.OnClose)
+        print(self.Plot)
 
 
-        TF.Show()
-        return 
-    
+    # hide ourself on close, don't destroy
+    def OnClose(self, event):
+        print("in close")
+        self.PRI.LoopDevices(looplist = self.looplist,Plot=self.Plot,plotdir=self.outputdir,plotting = self.Screen)
+        
+        self.Destroy()
+
+         
+    def OnLoopChecked(self,event):
+        """ controls what has been checked in the loodevice"""
+        cb = event.GetEventObject() 
+        print(cb.GetLabel(),' is clicked',cb.GetValue())
+        if(cb.GetLabel() == 'Plot?'):
+            self.Plot=cb.GetValue()
+        if(cb.GetLabel() == 'Screen?'):
+            self.Screen=cb.GetValue()
+        print(self.Plot,' ' ,self.Screen)
+   
+      
+    def onChecked(self, event): 
+        cb = event.GetEventObject() 
+        print(cb.GetLabel(),' is clicked',cb.GetValue())
+
+         
+  
          
         
-    def OnGetBranchList(self,event):
-        """ Gives a list of the branches in the ROOT tree"""
-        self.MyT.GetBranchList()
-        
-    def OnGetDeviceList(self,event):
-        """ print all the available devices"""
-        
-        print(self.startline,"Getting list of devices")
-        self.MyT.GetDeviceList()
-        
+         
+    def OnGetLoopList(self,event):    
+        """ create the list to loop over"""
+        print('not implemented yet')
+ 
     def OnGetSpeedBoxFile(self,event):
         """ reads the filename and file for the speedbox comparison"""
         
@@ -289,12 +324,7 @@ class MyFrame(wx.Frame):
     def OnGetVariables(self,event):
         """ provides a list of variables to choose from"""
         
-        # Chek if Branchlists has already been filled
-        
-        if not(hasattr(self.MyT, 'Blist')):
-            print(self.startline ,'no branchlist, will call GetBranchList')
-            self.MyT.GetBranchList()
-
+         
         frame = wx.Frame(parent = None,title ='variable list',size = (400,800),pos =(100,100))
         panel = wx.Panel(frame,-1) 
         self.FrameListPanel = frame  # so tha we can close this from a different function
@@ -308,7 +338,11 @@ class MyFrame(wx.Frame):
         topLbl = wx.StaticText(panel,-1,"Available branches")
         topLbl.SetFont(wx.Font(18,wx.SWISS,wx.NORMAL,wx.BOLD))
             
-        myclb = wx.CheckListBox(panel,-1,(20,100),(300,600),self.MyT.Blist,wx.LB_MULTIPLE)
+        myclb = wx.CheckListBox(panel,-1,(20,100),(300,600),self.PRI.GetVariableList(),wx.LB_MULTIPLE)
+        # set the variables from reducelist to checked, since those will be mostly used
+        myclb.SetCheckedStrings(self.ReduceList)
+        
+        
         panel.Bind(wx.EVT_LISTBOX, self.EvtListBox, myclb)
         panel.Bind(wx.EVT_CHECKLISTBOX, self.EvtCheckListBox, myclb)
         myclb.SetSelection(0)
@@ -341,8 +375,11 @@ class MyFrame(wx.Frame):
         panel.SetSizer(mainSizer)
         myclb.Show(show=True)
         
-        var_list = myclb.GetCheckedItems()
-        print('list',var_list)
+        var_list = list(myclb.GetCheckedStrings())
+        #print('list',var_list)
+        
+        # new reduce list
+        self.ReduceList=var_list
             
     def OnGetLogWarnings(self,event):
         
@@ -371,6 +408,15 @@ class MyFrame(wx.Frame):
             self.devicename = dialog.GetValue()
         dialog.Destroy()
 
+    def OnSetTest(self,Event):
+        """ creates the test for reading the database"""
+        # create the panel
+        frame = wx.Frame(parent = None,title ='Setting up the test',size = (400,140),pos =(100,100))
+        panel = wx.Panel(frame,-1) 
+        frame.Show(show=True)
+        multitext = wx.TextCtrl(panel,-1,"    \n\n\n",size=(390,120),style=wx.TE_MULTILINE)
+        multitext.SetInsertionPoint(0)
+    
         
        
     def OnSetOutputFile(self,event):   
@@ -380,11 +426,6 @@ class MyFrame(wx.Frame):
         OF=OutputFileDialog(default_dir = '/LCWA/data/new/',default_file='reduce_devicedetail.csv')
         OF.Show()
         
-        
-    def OnScanRXTX(self,event):    
-        """scan rx and tx for device """
-                
-        self.MyT.ScanRXTX(self.selected_device)
         
         
     def GetAllDevices(self):

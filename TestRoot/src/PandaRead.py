@@ -100,6 +100,12 @@ class PandaRead(object):
         temp = time.mktime(datetime.datetime.strptime(mytime, "%Y-%m-%d %H:%M:%S").timetuple())
         return temp
     
+    
+    def GetVariableList(self):
+        """this routine returns a list of all the variables in the original table"""
+        print(self.lcwa_data.columns.tolist())
+        return self.lcwa_data.columns.tolist()
+    
     def LoopDevices(self, looplist = None, Plot=False,plotdir=None , plotting = False):
         """loops through all the devices listed in looplist"""
         
@@ -667,7 +673,8 @@ if __name__ == '__main__':
     PR=PandaRead()
     #read in the raw datafile
     PR.ReadFile(filename)
-    
+    PR.GetVariableList()
+   
     # the list of columns we want to keep: If yo want more to keep add the names here. the
     #order does not matter
     ReduceList = ["apMac","cpuUsage","deviceIp","deviceName","dtCreate","lanRxBytes", \

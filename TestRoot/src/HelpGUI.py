@@ -49,7 +49,7 @@ class MyPanel(wx.Panel):
         
         self.button = wx.Button(self,label="press me")
         #find location of the files:
-        filename = 'PandaControl.htm'
+        filename = 'PandaControl.html'
         
         self.help_file = os.getcwd()+'/help_files/'+filename
         if(os.path.isfile(self.help_file)):

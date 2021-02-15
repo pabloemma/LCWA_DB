@@ -7,7 +7,7 @@ self.lcwa_data        The data buffer from the csv file, this is a pandas databa
 self.variable_list    A list fo all the variables, equiavlent to the column names
 self.ReduceTable       The new table reduced to the list of columns in ReduceList 
 
-test
+test1
 '''
 
 import pandas as PDS

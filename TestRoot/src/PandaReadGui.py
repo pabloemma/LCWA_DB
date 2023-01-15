@@ -22,6 +22,7 @@ sys.path.insert(3,'/Users/klein/git/LCWA_UNMS/RRD_SNMP/src')
 from PandaRead import PandaRead
 from MyError import MyError 
 from OutputFileDialog import OutputFileDialog
+import HelpGUI
 
 
 from pubsub import pub
@@ -166,13 +167,17 @@ class MyFrame(wx.Frame):
         service_menu = wx.Menu()
         menubar.Append(service_menu,"Services")
 
+        self.CreateMenuItem(service_menu, "Get Variables",self.OnGetVariables)
         self.CreateMenuItem(service_menu, "Reduce Table",self.OnReduceTable)
         self.CreateMenuItem(service_menu, "Loop over devices",self.OnLoopDevices)
         self.CreateMenuItem(service_menu, "Get SpeedBoxFile",self.OnGetSpeedBoxFile)
-        self.CreateMenuItem(service_menu, "Get Variables",self.OnGetVariables)
         self.CreateMenuItem(service_menu, "Set Device",self.OnSetDevice)
         
         self.CreateMenuItem(service_menu, "Create tests",self.OnSetTest)
+        
+        action_menu = wx.Menu()
+        menubar.Append(action_menu,"Actions")
+        self.CreateMenuItem(action_menu, "Set Time Window",self.OnSetTimeWindow)
 
         plot_menu = wx.Menu()
         menubar.Append(plot_menu,"plots")
@@ -417,7 +422,21 @@ class MyFrame(wx.Frame):
         multitext = wx.TextCtrl(panel,-1,"    \n\n\n",size=(390,120),style=wx.TE_MULTILINE)
         multitext.SetInsertionPoint(0)
     
+    
+    def OnSetTimeWindow(self,event): 
+        frame = wx.Frame(parent = None,title ='Setting up time window',size = (400,140),pos =(100,100))
+        panel = wx.Panel(frame,-1) 
         
+        
+
+        
+        
+        
+        
+        self.PRI.MakeTimeCut(time_low = tl, time_high = th)  
+        pass
+        
+         
        
     def OnSetOutputFile(self,event):   
         """
